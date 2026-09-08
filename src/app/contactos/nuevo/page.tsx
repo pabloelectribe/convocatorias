@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { createContact } from "../actions";
 
@@ -55,7 +56,10 @@ export default async function NuevoContactoPage() {
           </div>
         </div>
         <div>
-          <label className="label" htmlFor="channelId">Canal de origen</label>
+          <div className="flex items-center justify-between">
+            <label className="label" htmlFor="channelId">Canal de origen</label>
+            <Link href="/canales" className="text-xs text-brand-600 hover:underline">Gestionar canales</Link>
+          </div>
           <select className="input" id="channelId" name="channelId">
             <option value="">— Sin especificar —</option>
             {channels.map((c) => (

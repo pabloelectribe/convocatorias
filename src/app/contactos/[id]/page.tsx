@@ -117,7 +117,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
               {contact.tags.length === 0 && <p className="text-sm text-slate-400">Sin temas asignados.</p>}
             </div>
             <form action={addTagToContact.bind(null, contact.id)} className="flex gap-2">
-              <select className="input" name="tagId" defaultValue="">
+              <select className="input" name="tagId" defaultValue="" required>
                 <option value="" disabled>Agregar tema...</option>
                 {allTags.filter((t) => !contactTagIds.has(t.id)).map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
@@ -141,7 +141,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
               {contact.segments.length === 0 && <p className="text-sm text-slate-400">No pertenece a ningún segmento.</p>}
             </ul>
             <form action={addToSegment.bind(null, contact.id)} className="flex gap-2">
-              <select className="input" name="segmentId" defaultValue="">
+              <select className="input" name="segmentId" defaultValue="" required>
                 <option value="" disabled>Agregar a segmento...</option>
                 {allSegments.filter((s) => !memberSegmentIds.has(s.id)).map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>

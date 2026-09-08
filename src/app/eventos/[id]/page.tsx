@@ -74,7 +74,7 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
         <div className="card p-4">
           <h2 className="font-medium mb-2">Invitar a un segmento</h2>
           <form action={inviteSegment.bind(null, event.id)} className="flex gap-2">
-            <select className="input" name="segmentId" defaultValue="">
+            <select className="input" name="segmentId" defaultValue="" required>
               <option value="" disabled>Seleccionar segmento...</option>
               {segments.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
