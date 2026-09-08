@@ -7,4 +7,5 @@ build/
 .env*.local
 prisma/dev.db
 prisma/dev.db-journal
+tsconfig.tsbuildinfo
 .DS_Store

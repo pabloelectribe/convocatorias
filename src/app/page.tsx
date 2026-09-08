@@ -114,6 +114,10 @@ export default async function DashboardPage() {
           </tbody>
         </table>
       </div>
+
+      <p className="text-xs text-slate-400">
+        <Link href="/admin/seed" className="hover:underline">Cargar / restablecer datos de ejemplo</Link>
+      </p>
     </div>
   );
 }

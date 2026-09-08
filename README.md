@@ -26,6 +26,8 @@ de conversión), y su historial completo de interacción con el programa.
   embudo de conversión por convocatoria (invitado → inscrito → asistió) y una métrica simple
   de "temática de mayor interés" según a qué asistió.
 - **Panel general** (`/`): totales, embudo global y actividad reciente.
+- **Datos de ejemplo** (`/admin/seed`): botón para (re)cargar el set de datos ficticios de
+  prueba en cualquier momento (borra todo lo existente; pide confirmación escrita).
 
 ## Stack técnico
 
@@ -55,6 +57,19 @@ Postgres usada en el despliegue, o una local vía Docker).
 
 Contraseña de acceso por defecto: la definida en `ADMIN_PASSWORD` (`.env.example` trae
 `vamosmipyme`).
+
+### Despliegue en Vercel
+
+El comando de build (`npm run build`) corre `prisma db push` automáticamente contra la
+`DATABASE_URL` configurada en el proyecto de Vercel antes de compilar, así que **el esquema se
+mantiene sincronizado en cada deploy sin que nadie tenga que ejecutar comandos a mano ni
+compartir la contraseña de la base de datos**. Basta con:
+
+1. Crear en el proyecto de Vercel una base de datos Postgres (pestaña *Storage* → *Postgres*,
+   plan gratuito) y conectarla al proyecto — esto define `DATABASE_URL` automáticamente.
+2. Configurar `ADMIN_PASSWORD` y `AUTH_SECRET` como variables de entorno del proyecto.
+3. Desplegar. En el primer deploy la base queda vacía; entrar a `/admin/seed` en el sitio ya
+   desplegado y usar el botón para cargar los datos de ejemplo.
 
 ## Modelo de datos (resumen)
 
