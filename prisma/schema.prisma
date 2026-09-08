@@ -1,0 +1,191 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------------------------
+// CRM: contactos, canales de adquisición, temas de interés, segmentos/listas
+// ---------------------------------------------------------------------------
+
+model Contact {
+  id          String   @id @default(cuid())
+  rut         String?  @unique
+  email       String?  @unique
+  firstName   String?
+  lastName    String?
+  phone       String?
+  companyName String?
+  sector      String?
+  comuna      String?
+  region      String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  channelId String?
+  channel   Channel? @relation(fields: [channelId], references: [id])
+
+  tags          ContactTag[]
+  segments      SegmentMember[]
+  invitations   Invitation[]
+  registrations Registration[]
+  attendances   Attendance[]
+  activities    TimelineEvent[]
+}
+
+model Channel {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  contacts  Contact[]
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  contacts ContactTag[]
+}
+
+model ContactTag {
+  contactId String
+  tagId     String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, tagId])
+}
+
+model Segment {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  members     SegmentMember[]
+  invitations Invitation[]
+}
+
+model SegmentMember {
+  segmentId String
+  contactId String
+  addedAt   DateTime @default(now())
+
+  segment Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([segmentId, contactId])
+}
+
+// ---------------------------------------------------------------------------
+// Ticketera: eventos, invitaciones, inscripciones, asistencia
+// ---------------------------------------------------------------------------
+
+/// Valores válidos: ZOOM | PRESENCIAL | HIBRIDO (ver src/lib/enums.ts). SQLite no soporta enums nativos.
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  topic       String?
+  modality    String
+  location    String?
+  zoomLink    String?
+  startAt     DateTime
+  endAt       DateTime?
+  capacity    Int?
+  status      String   @default("BORRADOR")
+  createdAt   DateTime @default(now())
+
+  invitations   Invitation[]
+  registrations Registration[]
+  attendances   Attendance[]
+  activities    TimelineEvent[]
+}
+
+/// status: ENVIADA | ABIERTA | REGISTRADA | DECLINADA (ver src/lib/enums.ts)
+model Invitation {
+  id          String    @id @default(cuid())
+  token       String    @unique @default(cuid())
+  status      String    @default("ENVIADA")
+  sentAt      DateTime  @default(now())
+  respondedAt DateTime?
+
+  eventId String
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  segmentId String?
+  segment   Segment? @relation(fields: [segmentId], references: [id])
+
+  @@unique([eventId, contactId])
+}
+
+/// source: INVITACION | AUTOINSCRIPCION | IMPORTACION (ver src/lib/enums.ts)
+model Registration {
+  id           String   @id @default(cuid())
+  ticketCode   String   @unique
+  source       String
+  registeredAt DateTime @default(now())
+  cancelled    Boolean  @default(false)
+
+  eventId String
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, contactId])
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  checkedInAt DateTime @default(now())
+
+  eventId String
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, contactId])
+}
+
+// ---------------------------------------------------------------------------
+// Importación de datos externos (CSV manual de vamosmipyme.cl)
+// ---------------------------------------------------------------------------
+
+model ImportBatch {
+  id           String   @id @default(cuid())
+  filename     String
+  importedAt   DateTime @default(now())
+  rowCount     Int
+  createdCount Int
+  updatedCount Int
+  errorCount   Int
+  notes        String?
+}
+
+// ---------------------------------------------------------------------------
+// Timeline unificado: la vista "360°" de cada cliente
+// ---------------------------------------------------------------------------
+
+/// type: CONTACT_CREATED | IMPORT | INVITED | REGISTERED | ATTENDED | DECLINED | FORM_SUBMITTED | NOTE (ver src/lib/enums.ts)
+model TimelineEvent {
+  id          String   @id @default(cuid())
+  type        String
+  occurredAt  DateTime @default(now())
+  title       String
+  description String?
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id])
+}
