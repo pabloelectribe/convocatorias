@@ -129,17 +129,20 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
 
           <div className="card p-4">
             <h2 className="font-medium mb-2">Segmentos</h2>
-            <ul className="space-y-1 mb-3">
-              {contact.segments.map((s) => (
-                <li key={s.segmentId} className="flex items-center justify-between text-sm">
-                  <Link href={`/segmentos/${s.segmentId}`} className="text-brand-700 hover:underline">{s.segment.name}</Link>
-                  <form action={removeFromSegment.bind(null, contact.id, s.segmentId)}>
-                    <button className="text-xs text-slate-400 hover:text-red-600">Quitar</button>
-                  </form>
-                </li>
-              ))}
-              {contact.segments.length === 0 && <p className="text-sm text-slate-400">No pertenece a ningún segmento.</p>}
-            </ul>
+            {contact.segments.length > 0 ? (
+              <ul className="mb-3 rounded-md border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                {contact.segments.map((s) => (
+                  <li key={s.segmentId} className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-slate-50">
+                    <Link href={`/segmentos/${s.segmentId}`} className="font-medium text-brand-700 hover:underline">{s.segment.name}</Link>
+                    <form action={removeFromSegment.bind(null, contact.id, s.segmentId)}>
+                      <button className="text-xs text-slate-400 hover:text-red-600 shrink-0">Quitar</button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-400 mb-3">No pertenece a ningún segmento.</p>
+            )}
             <form action={addToSegment.bind(null, contact.id)} className="flex gap-2">
               <select className="input" name="segmentId" defaultValue="" required>
                 <option value="" disabled>Agregar a segmento...</option>
