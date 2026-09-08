@@ -31,10 +31,10 @@ de conversión), y su historial completo de interacción con el programa.
 
 - **Next.js 14 (App Router) + TypeScript** — Server Components para lectura, Server Actions
   para todas las mutaciones (sin API REST intermedia).
-- **Prisma + SQLite** para el prototipo (`prisma/schema.prisma`). El modelo está diseñado para
-  migrar a Postgres cambiando solo el `datasource` (los campos que en otros motores serían
-  `enum` se modelan como `String` porque SQLite no soporta enums nativos; los valores válidos
-  están documentados en `src/lib/enums.ts`).
+- **Prisma + PostgreSQL** (`prisma/schema.prisma`). Nota: los campos que en Postgres podrían
+  ser `enum` se modelan como `String` porque el prototipo empezó sobre SQLite (que no soporta
+  enums nativos) y se mantuvo así al migrar; los valores válidos están documentados en
+  `src/lib/enums.ts`.
 - **Tailwind CSS** para la interfaz.
 - Autenticación mínima de un solo usuario admin (cookie + contraseña compartida por variable
   de entorno) para proteger las vistas internas; las páginas públicas (`/e/*`, `/invitacion/*`)
@@ -43,12 +43,15 @@ de conversión), y su historial completo de interacción con el programa.
 ## Cómo correrlo localmente
 
 ```bash
-cp .env.example .env      # ajusta ADMIN_PASSWORD y AUTH_SECRET
+cp .env.example .env      # DATABASE_URL de Postgres + ADMIN_PASSWORD y AUTH_SECRET
 npm install
-npm run db:push           # crea prisma/dev.db según el schema
+npm run db:push           # aplica el schema a esa base de datos
 npm run db:seed           # datos de ejemplo (contactos, eventos, invitaciones ficticias)
 npm run dev                # http://localhost:3000
 ```
+
+Necesitas una base de datos Postgres a mano (por ejemplo, la misma instancia de Neon/Vercel
+Postgres usada en el despliegue, o una local vía Docker).
 
 Contraseña de acceso por defecto: la definida en `ADMIN_PASSWORD` (`.env.example` trae
 `vamosmipyme`).

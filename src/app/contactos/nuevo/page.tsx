@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { createContact } from "../actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function NuevoContactoPage() {
   const channels = await prisma.channel.findMany({ orderBy: { name: "asc" } });
 
