@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/format";
+import { RutInput } from "@/components/RutInput";
 import { registerPublic } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +56,7 @@ export default async function PublicEventPage({ params, searchParams }: { params
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label" htmlFor="rut">RUT</label>
-                <input className="input" id="rut" name="rut" placeholder="12.345.678-9" />
+                <RutInput id="rut" name="rut" />
               </div>
               <div>
                 <label className="label" htmlFor="email">Email</label>

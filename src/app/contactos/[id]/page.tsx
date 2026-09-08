@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime, fullName } from "@/lib/format";
+import { formatDateTime, fullName, rutDisplay } from "@/lib/format";
 import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFromContact } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -88,7 +88,7 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
         <div className="lg:col-span-1 space-y-6">
           <div className="card p-4 space-y-2 text-sm">
             <h2 className="font-medium mb-2">Datos de contacto</h2>
-            <Field label="RUT" value={contact.rut} />
+            <Field label="RUT" value={rutDisplay(contact.rut)} />
             <Field label="Email" value={contact.email} />
             <Field label="Teléfono" value={contact.phone} />
             <Field label="Comuna" value={contact.comuna} />

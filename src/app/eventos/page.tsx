@@ -31,7 +31,11 @@ export default async function EventosPage() {
           <h1 className="text-xl font-semibold">Eventos / Convocatorias</h1>
           <p className="text-sm text-slate-500">Zoom o presenciales: invita, inscribe y controla la asistencia.</p>
         </div>
-        <Link href="/eventos/nuevo" className="btn-primary">+ Nuevo evento</Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/eventos/calendario" className="btn-secondary">📅 Calendario</Link>
+          <a href="/api/export/eventos" className="btn-secondary">⬇ Descargar CSV</a>
+          <Link href="/eventos/nuevo" className="btn-primary">+ Nuevo evento</Link>
+        </div>
       </div>
 
       <div className="card overflow-x-auto">

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { fullName } from "@/lib/format";
+import { fullName, rutDisplay } from "@/lib/format";
 import { addMemberByRutOrEmail, removeMember } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ export default async function SegmentDetailPage({ params }: { params: { id: stri
                     {fullName(m.contact)}
                   </Link>
                 </td>
-                <td className="px-4 py-2 text-slate-600">{m.contact.rut || "—"}</td>
+                <td className="px-4 py-2 text-slate-600">{rutDisplay(m.contact.rut)}</td>
                 <td className="px-4 py-2 text-slate-600">{m.contact.email || "—"}</td>
                 <td className="px-4 py-2 text-slate-600">{m.contact.companyName || "—"}</td>
                 <td className="px-4 py-2 text-right">

@@ -12,12 +12,15 @@ export default async function CanalesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Canales de origen</h1>
-        <p className="text-sm text-slate-500">
-          De dónde llegan los contactos (formulario web, feria, redes sociales, referidos, importaciones, etc.).
-          Se usan para saber por qué canal se captó a cada cliente.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">Canales de origen</h1>
+          <p className="text-sm text-slate-500">
+            De dónde llegan los contactos (formulario web, feria, redes sociales, referidos, importaciones, etc.).
+            Se usan para saber por qué canal se captó a cada cliente.
+          </p>
+        </div>
+        <a href="/api/export/canales" className="btn-secondary shrink-0">⬇ Descargar CSV</a>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { fullName } from "@/lib/format";
+import { fullName, rutDisplay } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +58,7 @@ export default async function ContactosPage({ searchParams }: { searchParams: { 
                   </Link>
                   <p className="text-xs text-slate-400">{c.email}</p>
                 </td>
-                <td className="px-4 py-2 text-slate-600">{c.rut || "—"}</td>
+                <td className="px-4 py-2 text-slate-600">{rutDisplay(c.rut)}</td>
                 <td className="px-4 py-2 text-slate-600">{c.companyName || "—"}</td>
                 <td className="px-4 py-2 text-slate-600">{c.channel?.name || "—"}</td>
                 <td className="px-4 py-2">
