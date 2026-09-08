@@ -5,6 +5,8 @@ import { normalizeRut, formatRut, isValidRut } from "@/lib/rut";
 import { TimelineType } from "@/lib/enums";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { AUTHOR_COOKIE } from "@/lib/constants";
 
 export async function createContact(formData: FormData) {
   const rutRaw = String(formData.get("rut") || "").trim();
@@ -38,10 +40,14 @@ export async function createContact(formData: FormData) {
 export async function addNote(contactId: string, formData: FormData) {
   "use server";
   const text = String(formData.get("note") || "").trim();
+  const authorName = String(formData.get("author") || "").trim() || null;
   if (!text) return;
   await prisma.timelineEvent.create({
-    data: { contactId, type: TimelineType.NOTE, title: "Nota", description: text },
+    data: { contactId, type: TimelineType.NOTE, title: "Nota", description: text, authorName },
   });
+  if (authorName) {
+    cookies().set(AUTHOR_COOKIE, authorName, { maxAge: 60 * 60 * 24 * 365, path: "/" });
+  }
   revalidatePath(`/contactos/${contactId}`);
 }
 

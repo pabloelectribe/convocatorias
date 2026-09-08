@@ -185,6 +185,7 @@ model TimelineEvent {
   occurredAt  DateTime @default(now())
   title       String
   description String?
+  authorName  String?
 
   contactId String
   contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)

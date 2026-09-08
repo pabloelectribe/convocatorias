@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, rutDisplay } from "@/lib/format";
 import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFromContact } from "../actions";
+import { AUTHOR_COOKIE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,7 @@ const TIMELINE_COLOR: Record<string, string> = {
 };
 
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
+  const savedAuthorName = cookies().get(AUTHOR_COOKIE)?.value || "";
   const contact = await prisma.contact.findUnique({
     where: { id: params.id },
     include: {
@@ -186,8 +189,9 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
           <div className="card p-4">
             <h2 className="font-medium mb-3">Historial (timeline 360°)</h2>
             <form action={addNote.bind(null, contact.id)} className="flex gap-2 mb-4">
-              <input className="input" name="note" placeholder="Agregar una nota sobre este cliente..." />
-              <button className="btn-secondary" type="submit">Agregar</button>
+              <input className="input" name="note" placeholder="Agregar una nota sobre este cliente..." required />
+              <input className="input max-w-[160px]" name="author" placeholder="Tu nombre" defaultValue={savedAuthorName} />
+              <button className="btn-secondary shrink-0" type="submit">Agregar</button>
             </form>
             <ol className="space-y-3">
               {contact.activities.map((a) => (
@@ -208,7 +212,10 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
                       ) : null}
                     </p>
                     {a.description && <p className="text-slate-500">{a.description}</p>}
-                    <p className="text-xs text-slate-400">{formatDateTime(a.occurredAt)}</p>
+                    <p className="text-xs text-slate-400">
+                      {formatDateTime(a.occurredAt)}
+                      {a.authorName && <> · registrado por <span className="font-medium text-slate-500">{a.authorName}</span></>}
+                    </p>
                   </div>
                 </li>
               ))}
