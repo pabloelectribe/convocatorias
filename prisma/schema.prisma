@@ -1,6 +1,9 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon expone la URL de DATABASE_URL vía pooler (pgbouncer), que puede fallar con
+  // comandos DDL como `prisma db push`. directUrl usa la conexión directa para eso.
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 generator client {
