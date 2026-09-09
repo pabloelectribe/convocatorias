@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RutInput } from "@/components/RutInput";
+import { RegionComunaSelect } from "@/components/RegionComunaSelect";
 
 export interface ContactFormValues {
   firstName?: string | null;
@@ -63,14 +64,7 @@ export function ContactForm({
           <label className="label" htmlFor="sector">Sector</label>
           <input className="input" id="sector" name="sector" defaultValue={v.sector || ""} />
         </div>
-        <div>
-          <label className="label" htmlFor="comuna">Comuna</label>
-          <input className="input" id="comuna" name="comuna" defaultValue={v.comuna || ""} />
-        </div>
-        <div>
-          <label className="label" htmlFor="region">Región</label>
-          <input className="input" id="region" name="region" defaultValue={v.region || ""} />
-        </div>
+        <RegionComunaSelect defaultRegion={v.region} defaultComuna={v.comuna} />
       </div>
       <div>
         <div className="flex items-center justify-between">

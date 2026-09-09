@@ -9,13 +9,16 @@ export default async function ImportarPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Importar datos de vamosmipyme.cl</h1>
-        <p className="text-sm text-slate-500">
-          Sube el CSV exportado manualmente desde la plataforma (registros en formularios o actividades). Los contactos se
-          identifican por RUT o email: si ya existen, se enriquecen sus datos y se agrega el hito al historial 360°; si son
-          nuevos, se crean automáticamente.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">Importar datos de vamosmipyme.cl</h1>
+          <p className="text-sm text-slate-500">
+            Sube el CSV exportado manualmente desde la plataforma (registros en formularios o actividades). Los contactos se
+            identifican por RUT o email: si ya existen, se enriquecen sus datos y se agrega el hito al historial 360°; si son
+            nuevos, se crean automáticamente.
+          </p>
+        </div>
+        <a href="/api/plantilla-importacion" className="btn-secondary shrink-0">⬇ Plantilla de ejemplo</a>
       </div>
 
       <ImportWizard />
@@ -36,7 +39,7 @@ export default async function ImportarPage() {
           <tbody className="divide-y divide-slate-100">
             {batches.map((b) => (
               <tr key={b.id}>
-                <td className="px-4 py-2 font-medium">{b.filename}</td>
+                <td className="px-4 py-2 font-medium font-mono text-xs">{b.filename}</td>
                 <td className="px-4 py-2 text-slate-500">{formatDateTime(b.importedAt)}</td>
                 <td className="px-4 py-2">{b.rowCount}</td>
                 <td className="px-4 py-2">{b.createdCount}</td>
