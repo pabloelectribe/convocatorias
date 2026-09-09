@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDateTime, pct } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { HBar } from "@/components/charts/HBar";
-import { CATEGORICAL_COLORS, SEQUENTIAL_BLUE } from "@/lib/chart-colors";
+import { Funnel } from "@/components/charts/Funnel";
+import { CATEGORICAL_COLORS } from "@/lib/chart-colors";
 
 export const dynamic = "force-dynamic";
 
@@ -108,23 +109,13 @@ export default async function DashboardPage() {
         <div className="card p-4 lg:col-span-1">
           <h2 className="font-medium mb-1">Embudo global de convocatorias</h2>
           <p className="text-xs text-slate-400 mb-4">De invitado a asistente, sobre el total histórico.</p>
-          <div className="space-y-3">
-            <HBar label="Invitados" value={s.invitationCount} max={s.invitationCount || 1} color={SEQUENTIAL_BLUE.light} />
-            <HBar
-              label="Inscritos"
-              value={s.registrationCount}
-              max={s.invitationCount || 1}
-              color={SEQUENTIAL_BLUE.mid}
-              valueLabel={`${s.registrationCount} · ${pct(s.registrationCount, s.invitationCount)}`}
-            />
-            <HBar
-              label="Asistieron"
-              value={s.attendanceCount}
-              max={s.invitationCount || 1}
-              color={SEQUENTIAL_BLUE.dark}
-              valueLabel={`${s.attendanceCount} · ${pct(s.attendanceCount, s.invitationCount)}`}
-            />
-          </div>
+          <Funnel
+            stages={[
+              { label: "Invitados", value: s.invitationCount },
+              { label: "Inscritos", value: s.registrationCount },
+              { label: "Asistieron", value: s.attendanceCount },
+            ]}
+          />
         </div>
 
         <div className="card p-4 lg:col-span-1">
