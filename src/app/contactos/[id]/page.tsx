@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, rutDisplay } from "@/lib/format";
-import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFromContact } from "../actions";
+import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFromContact, inviteContactToEvent } from "../actions";
 import { AUTHOR_COOKIE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -46,9 +46,10 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
   });
   if (!contact) notFound();
 
-  const [allSegments, allTags] = await Promise.all([
+  const [allSegments, allTags, allEvents] = await Promise.all([
     prisma.segment.findMany({ orderBy: { name: "asc" } }),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
+    prisma.event.findMany({ orderBy: { startAt: "desc" } }),
   ]);
 
   const memberSegmentIds = new Set(contact.segments.map((s) => s.segmentId));
@@ -84,7 +85,10 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
           <h1 className="text-xl font-semibold">{fullName(contact)}</h1>
           <p className="text-sm text-slate-500">{contact.companyName} {contact.sector ? `· ${contact.sector}` : ""}</p>
         </div>
-        <Link href="/contactos" className="btn-secondary">← Volver</Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href={`/contactos/${contact.id}/editar`} className="btn-secondary">✎ Editar</Link>
+          <Link href="/contactos" className="btn-secondary">← Volver</Link>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -184,6 +188,15 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
                 ))}
               </tbody>
             </table>
+            <form action={inviteContactToEvent.bind(null, contact.id)} className="flex gap-2 mt-3">
+              <select className="input" name="eventId" defaultValue="" required>
+                <option value="" disabled>Invitar a evento...</option>
+                {allEvents.filter((e) => !eventIds.has(e.id)).map((e) => (
+                  <option key={e.id} value={e.id}>{e.title}</option>
+                ))}
+              </select>
+              <button className="btn-secondary shrink-0" type="submit">Invitar</button>
+            </form>
           </div>
 
           <div className="card p-4">

@@ -30,7 +30,10 @@ export default async function ContactosPage({ searchParams }: { searchParams: { 
           <h1 className="text-xl font-semibold">Contactos</h1>
           <p className="text-sm text-slate-500">Base de clientes y prospectos (CRM 360°).</p>
         </div>
-        <Link href="/contactos/nuevo" className="btn-primary">+ Nuevo contacto</Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <a href={`/api/export/contactos${q ? `?q=${encodeURIComponent(q)}` : ""}`} className="btn-secondary">⬇ Descargar CSV</a>
+          <Link href="/contactos/nuevo" className="btn-primary">+ Nuevo contacto</Link>
+        </div>
       </div>
 
       <form className="flex gap-2">
