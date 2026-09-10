@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, rutDisplay } from "@/lib/format";
 import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFromContact, inviteContactToEvent } from "../actions";
+import { logTouchFromContactPage } from "../../campanas/actions";
 import { AUTHOR_COOKIE } from "@/lib/constants";
 import { TIMELINE_LABEL, TIMELINE_BADGE_CLASS as TIMELINE_COLOR } from "@/lib/timeline";
 import { ContactTimelineChart } from "@/components/charts/ContactTimelineChart";
@@ -22,15 +23,22 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
       registrations: { include: { event: true } },
       attendances: { include: { event: true } },
       activities: { include: { event: true }, orderBy: { occurredAt: "desc" } },
+      campaignTouches: { include: { campaign: true }, orderBy: { occurredAt: "desc" } },
     },
   });
   if (!contact) notFound();
 
-  const [allSegments, allTags, allEvents] = await Promise.all([
+  const [allSegments, allTags, allEvents, allCampaigns] = await Promise.all([
     prisma.segment.findMany({ orderBy: { name: "asc" } }),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
     prisma.event.findMany({ orderBy: { startAt: "desc" } }),
+    prisma.campaign.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
+
+  const touchesByMedium = new Map<string, number>();
+  for (const t of contact.campaignTouches) {
+    touchesByMedium.set(t.campaign.medium, (touchesByMedium.get(t.campaign.medium) || 0) + 1);
+  }
 
   const memberSegmentIds = new Set(contact.segments.map((s) => s.segmentId));
   const contactTagIds = new Set(contact.tags.map((t) => t.tagId));
@@ -89,6 +97,36 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
             <Field label="Eventos asistidos" value={String(attendedCount)} />
             <Field label="Temática de mayor interés" value={favoriteTopic} />
             <Field label="Última actividad" value={lastActivity ? formatDateTime(lastActivity.occurredAt) : undefined} />
+          </div>
+
+          <div className="card p-4">
+            <h2 className="font-medium mb-2">Contacto por campañas</h2>
+            {touchesByMedium.size > 0 ? (
+              <ul className="text-sm space-y-1 mb-3">
+                {Array.from(touchesByMedium.entries()).map(([medium, count]) => (
+                  <li key={medium} className="flex items-center justify-between">
+                    <span className="text-slate-600">{medium}</span>
+                    <span className="font-medium">{count}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-400 mb-3">Aún no se ha registrado contacto por ninguna campaña.</p>
+            )}
+            <form action={logTouchFromContactPage.bind(null, contact.id)} className="flex gap-2">
+              <select className="input" name="campaignId" defaultValue="" required>
+                <option value="" disabled>Registrar campaña...</option>
+                {allCampaigns.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.medium})</option>
+                ))}
+              </select>
+              <button className="btn-secondary shrink-0" type="submit">+</button>
+            </form>
+            {allCampaigns.length === 0 && (
+              <p className="text-xs text-slate-400 mt-2">
+                <Link href="/campanas" className="text-brand-600 hover:underline">Crea una campaña</Link> para poder registrar contactos.
+              </p>
+            )}
           </div>
 
           <div className="card p-4">

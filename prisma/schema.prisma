@@ -32,12 +32,13 @@ model Contact {
   channelId String?
   channel   Channel? @relation(fields: [channelId], references: [id])
 
-  tags          ContactTag[]
-  segments      SegmentMember[]
-  invitations   Invitation[]
-  registrations Registration[]
-  attendances   Attendance[]
-  activities    TimelineEvent[]
+  tags            ContactTag[]
+  segments        SegmentMember[]
+  invitations     Invitation[]
+  registrations   Registration[]
+  attendances     Attendance[]
+  activities      TimelineEvent[]
+  campaignTouches CampaignTouch[]
 }
 
 model Channel {
@@ -175,10 +176,37 @@ model ImportBatch {
 }
 
 // ---------------------------------------------------------------------------
+// Campañas: contacto por email, WhatsApp, redes sociales, etc. (fuera de
+// las convocatorias formales), para saber cuántas veces y quién tocó a
+// cada cliente por cada medio.
+// ---------------------------------------------------------------------------
+
+model Campaign {
+  id        String   @id @default(cuid())
+  name      String
+  medium    String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  touches CampaignTouch[]
+}
+
+model CampaignTouch {
+  id         String   @id @default(cuid())
+  occurredAt DateTime @default(now())
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
 // Timeline unificado: la vista "360°" de cada cliente
 // ---------------------------------------------------------------------------
 
-/// type: CONTACT_CREATED | IMPORT | INVITED | REGISTERED | ATTENDED | DECLINED | FORM_SUBMITTED | NOTE (ver src/lib/enums.ts)
+/// type: CONTACT_CREATED | IMPORT | INVITED | REGISTERED | ATTENDED | DECLINED | FORM_SUBMITTED | NOTE | CAMPAIGN_TOUCH (ver src/lib/enums.ts)
 model TimelineEvent {
   id          String   @id @default(cuid())
   type        String

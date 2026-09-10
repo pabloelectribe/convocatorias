@@ -42,6 +42,8 @@ const CONTACTS = [
 ];
 
 export async function seedDemoData() {
+  await prisma.campaignTouch.deleteMany();
+  await prisma.campaign.deleteMany();
   await prisma.timelineEvent.deleteMany();
   await prisma.attendance.deleteMany();
   await prisma.registration.deleteMany();
@@ -268,6 +270,40 @@ export async function seedDemoData() {
         occurredAt: new Date(now - 60 * day),
       },
     });
+  }
+
+  const newsletter = await prisma.campaign.create({
+    data: { name: "Newsletter agosto 2026", medium: "Email", notes: "Boletín mensual con fondos concursables vigentes." },
+  });
+  const whatsappRecordatorio = await prisma.campaign.create({
+    data: { name: "Recordatorio taller marketing", medium: "WhatsApp", notes: "Recordatorio 1 día antes del taller." },
+  });
+  const instagramPromo = await prisma.campaign.create({
+    data: { name: "Promoción Instagram exportación", medium: "Instagram" },
+  });
+
+  async function touch(campaignId: string, contactId: string, when: Date) {
+    await prisma.campaignTouch.create({ data: { campaignId, contactId, occurredAt: when } });
+    const campaign = campaignId === newsletter.id ? newsletter : campaignId === whatsappRecordatorio.id ? whatsappRecordatorio : instagramPromo;
+    await prisma.timelineEvent.create({
+      data: {
+        contactId,
+        type: TimelineType.CAMPAIGN_TOUCH,
+        title: `Contacto por ${campaign.medium}`,
+        description: campaign.name,
+        occurredAt: when,
+      },
+    });
+  }
+
+  for (const c of contacts.slice(0, 12)) {
+    await touch(newsletter.id, c.id, new Date(now - 12 * day));
+  }
+  for (const c of contacts.slice(3, 11)) {
+    await touch(whatsappRecordatorio.id, c.id, new Date(now - 21 * day));
+  }
+  for (const c of contacts.slice(0, 8)) {
+    await touch(instagramPromo.id, c.id, new Date(now - 5 * day));
   }
 
   return { contactCount: contacts.length };

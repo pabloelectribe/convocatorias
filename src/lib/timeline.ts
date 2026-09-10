@@ -9,6 +9,7 @@ export const TIMELINE_LABEL: Record<string, string> = {
   DECLINED: "Declinó",
   FORM_SUBMITTED: "Envió formulario",
   NOTE: "Nota",
+  CAMPAIGN_TOUCH: "Contacto por campaña",
 };
 
 /** Variante para armar oraciones ("Fulano {label} 'Evento'"), usada en el panel. */
@@ -21,6 +22,7 @@ export const TIMELINE_LABEL_SENTENCE: Record<string, string> = {
   DECLINED: "Declinó",
   FORM_SUBMITTED: "Envió formulario",
   NOTE: "Nota",
+  CAMPAIGN_TOUCH: "Recibió la campaña",
 };
 
 /** Clases de Tailwind para el badge de la ficha de contacto. */
@@ -33,6 +35,7 @@ export const TIMELINE_BADGE_CLASS: Record<string, string> = {
   DECLINED: "bg-red-100 text-red-700",
   FORM_SUBMITTED: "bg-purple-100 text-purple-700",
   NOTE: "bg-slate-100 text-slate-700",
+  CAMPAIGN_TOUCH: "bg-teal-100 text-teal-700",
 };
 
 /** Clases de Tailwind para el punto de color (listas de actividad reciente). */
@@ -45,6 +48,7 @@ export const TIMELINE_DOT_CLASS: Record<string, string> = {
   DECLINED: "bg-red-500",
   FORM_SUBMITTED: "bg-purple-500",
   NOTE: "bg-slate-400",
+  CAMPAIGN_TOUCH: "bg-teal-500",
 };
 
 /** Mismos colores en hex, para gráficos con estilos inline (barras apiladas, SVG). */
@@ -57,15 +61,20 @@ export const TIMELINE_HEX: Record<string, string> = {
   DECLINED: "#ef4444",
   FORM_SUBMITTED: "#a855f7",
   NOTE: "#94a3b8",
+  CAMPAIGN_TOUCH: "#14b8a6",
 };
 
 export const TIMELINE_TYPES_ORDERED = [
   "CONTACT_CREATED",
   "IMPORT",
   "FORM_SUBMITTED",
+  "CAMPAIGN_TOUCH",
   "INVITED",
   "REGISTERED",
   "ATTENDED",
   "DECLINED",
   "NOTE",
 ] as const;
+
+/** Medios de contacto sugeridos para campañas (email, WhatsApp, redes, etc.). */
+export const CAMPAIGN_MEDIUMS = ["Email", "WhatsApp", "Instagram", "Facebook", "SMS", "Llamada telefónica", "Otro"];

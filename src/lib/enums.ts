@@ -43,5 +43,6 @@ export const TimelineType = {
   DECLINED: "DECLINED",
   FORM_SUBMITTED: "FORM_SUBMITTED",
   NOTE: "NOTE",
+  CAMPAIGN_TOUCH: "CAMPAIGN_TOUCH",
 } as const;
 export type TimelineType = (typeof TimelineType)[keyof typeof TimelineType];
