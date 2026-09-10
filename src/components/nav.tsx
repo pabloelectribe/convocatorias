@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/canales", label: "Canales" },
   { href: "/segmentos", label: "Segmentos" },
   { href: "/eventos", label: "Eventos" },
+  { href: "/actividad", label: "Actividad" },
   { href: "/importar", label: "Importar CSV" },
 ];
 

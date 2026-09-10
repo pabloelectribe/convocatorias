@@ -5,30 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, rutDisplay } from "@/lib/format";
 import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFromContact, inviteContactToEvent } from "../actions";
 import { AUTHOR_COOKIE } from "@/lib/constants";
+import { TIMELINE_LABEL, TIMELINE_BADGE_CLASS as TIMELINE_COLOR } from "@/lib/timeline";
+import { ContactTimelineChart } from "@/components/charts/ContactTimelineChart";
 
 export const dynamic = "force-dynamic";
-
-const TIMELINE_LABEL: Record<string, string> = {
-  CONTACT_CREATED: "Contacto creado",
-  IMPORT: "Importado desde CSV",
-  INVITED: "Invitado",
-  REGISTERED: "Inscrito",
-  ATTENDED: "Asistió",
-  DECLINED: "Declinó",
-  FORM_SUBMITTED: "Envió formulario",
-  NOTE: "Nota",
-};
-
-const TIMELINE_COLOR: Record<string, string> = {
-  CONTACT_CREATED: "bg-slate-100 text-slate-700",
-  IMPORT: "bg-amber-100 text-amber-700",
-  INVITED: "bg-blue-100 text-blue-700",
-  REGISTERED: "bg-indigo-100 text-indigo-700",
-  ATTENDED: "bg-green-100 text-green-700",
-  DECLINED: "bg-red-100 text-red-700",
-  FORM_SUBMITTED: "bg-purple-100 text-purple-700",
-  NOTE: "bg-slate-100 text-slate-700",
-};
 
 export default async function ContactDetailPage({ params }: { params: { id: string } }) {
   const savedAuthorName = cookies().get(AUTHOR_COOKIE)?.value || "";
@@ -233,6 +213,12 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
                 </li>
               ))}
             </ol>
+          </div>
+
+          <div className="card p-4">
+            <h2 className="font-medium mb-1">Línea de tiempo</h2>
+            <p className="text-xs text-slate-400 mb-4">Puntos de contacto agrupados por mes.</p>
+            <ContactTimelineChart activities={contact.activities} />
           </div>
         </div>
       </div>

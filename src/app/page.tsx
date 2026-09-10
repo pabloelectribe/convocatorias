@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/format";
 import { HBar } from "@/components/charts/HBar";
 import { Funnel } from "@/components/charts/Funnel";
 import { CATEGORICAL_COLORS } from "@/lib/chart-colors";
+import { TIMELINE_LABEL_SENTENCE, TIMELINE_DOT_CLASS } from "@/lib/timeline";
 
 export const dynamic = "force-dynamic";
 
@@ -41,27 +42,6 @@ async function getStats() {
   };
 }
 
-const TIMELINE_LABEL: Record<string, string> = {
-  CONTACT_CREATED: "Contacto creado",
-  IMPORT: "Importado desde CSV",
-  INVITED: "Invitado a",
-  REGISTERED: "Se inscribió a",
-  ATTENDED: "Asistió a",
-  DECLINED: "Declinó",
-  FORM_SUBMITTED: "Envió formulario",
-  NOTE: "Nota",
-};
-
-const TIMELINE_DOT: Record<string, string> = {
-  CONTACT_CREATED: "bg-slate-400",
-  IMPORT: "bg-amber-500",
-  INVITED: "bg-blue-500",
-  REGISTERED: "bg-indigo-500",
-  ATTENDED: "bg-green-500",
-  DECLINED: "bg-red-500",
-  FORM_SUBMITTED: "bg-purple-500",
-  NOTE: "bg-slate-400",
-};
 
 const MODALITY_LABEL: Record<string, string> = { ZOOM: "Zoom", PRESENCIAL: "Presencial", HIBRIDO: "Híbrido" };
 const MODALITY_COLOR: Record<string, string> = {
@@ -178,13 +158,13 @@ export default async function DashboardPage() {
           <ul className="divide-y divide-slate-100">
             {s.recentActivity.map((a) => (
               <li key={a.id} className="py-2 text-sm flex items-start gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${TIMELINE_DOT[a.type] || "bg-slate-400"}`} />
+                <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${TIMELINE_DOT_CLASS[a.type] || "bg-slate-400"}`} />
                 <div>
                   <Link href={`/contactos/${a.contactId}`} className="font-medium text-brand-700 hover:underline">
                     {a.contact.firstName} {a.contact.lastName}
                   </Link>{" "}
                   <span className="text-slate-600">
-                    {TIMELINE_LABEL[a.type] || a.type}
+                    {TIMELINE_LABEL_SENTENCE[a.type] || a.type}
                     {a.event ? ` "${a.event.title}"` : ""}
                   </span>
                   <p className="text-xs text-slate-400">{formatDateTime(a.occurredAt)}</p>
