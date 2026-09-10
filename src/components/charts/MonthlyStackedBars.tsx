@@ -26,17 +26,30 @@ export function MonthlyStackedBars({ months }: { months: MonthRow[] }) {
 
   return (
     <div>
-      <div className="flex items-end gap-2 overflow-x-auto pb-2" style={{ height: CONTAINER_HEIGHT + 24 }}>
-        {months.map((m, i) => {
-          const total = totals[i];
+      {/* +32px de aire arriba para que el tooltip no se corte con el scroll horizontal */}
+      <div className="flex items-end gap-2 overflow-x-auto pb-2" style={{ height: CONTAINER_HEIGHT + 24 + 32 }}>
+        {months.map((m) => {
           return (
             <div key={m.key} className="flex flex-col items-center gap-1 shrink-0" style={{ width: 28 }}>
-              <div className="flex flex-col-reverse justify-start" style={{ height: CONTAINER_HEIGHT, width: 20 }} title={`${m.key}: ${total} puntos de contacto`}>
+              <div className="flex flex-col-reverse justify-start" style={{ height: CONTAINER_HEIGHT, width: 20 }}>
                 {TIMELINE_TYPES_ORDERED.map((t) => {
                   const count = m.counts[t] || 0;
                   if (count === 0) return null;
                   const height = Math.max((count / maxTotal) * CONTAINER_HEIGHT, 2);
-                  return <div key={t} style={{ height, backgroundColor: TIMELINE_HEX[t] }} title={`${TIMELINE_LABEL[t]}: ${count}`} />;
+                  return (
+                    <div key={t} className="relative group focus-within:z-10 hover:z-10" style={{ height }}>
+                      <div
+                        tabIndex={0}
+                        aria-label={`${TIMELINE_LABEL[t]}: ${count} en ${shortMonthLabel(m.key)}`}
+                        className="w-full h-full outline-none"
+                        style={{ backgroundColor: TIMELINE_HEX[t] }}
+                      />
+                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block group-focus-within:block whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-lg z-20">
+                        {TIMELINE_LABEL[t]}: {count}
+                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                      </div>
+                    </div>
+                  );
                 })}
               </div>
               <span className="text-[10px] text-slate-400 whitespace-nowrap">{shortMonthLabel(m.key)}</span>
