@@ -9,6 +9,16 @@ import { sendEmail } from "@/lib/email";
 import { buildEmail } from "@/lib/email-templates";
 import { getBaseUrl } from "@/lib/url";
 
+function combineDateTime(formData: FormData, prefix: string): Date | null {
+  const date = String(formData.get(`${prefix}Date`) || "");
+  if (!date) return null;
+  const [y, m, d] = date.split("-").map(Number);
+  const hour = Number(formData.get(`${prefix}Hour`) || 0);
+  const minute = Number(formData.get(`${prefix}Minute`) || 0);
+  const parsed = new Date(y, m - 1, d, hour, minute);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export async function createEvent(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
   const description = String(formData.get("description") || "").trim() || null;
@@ -16,13 +26,12 @@ export async function createEvent(formData: FormData) {
   const modality = String(formData.get("modality") || "ZOOM") as EventModality;
   const location = String(formData.get("location") || "").trim() || null;
   const zoomLink = String(formData.get("zoomLink") || "").trim() || null;
-  const startAt = new Date(String(formData.get("startAt")));
-  const endAtRaw = String(formData.get("endAt") || "");
-  const endAt = endAtRaw ? new Date(endAtRaw) : null;
+  const startAt = combineDateTime(formData, "start");
+  const endAt = combineDateTime(formData, "end");
   const capacityRaw = String(formData.get("capacity") || "");
   const capacity = capacityRaw ? parseInt(capacityRaw, 10) : null;
 
-  if (!title || isNaN(startAt.getTime())) throw new Error("Título y fecha de inicio son obligatorios");
+  if (!title || !startAt) throw new Error("Título y fecha de inicio son obligatorios");
 
   let slug = slugify(title);
   const existing = await prisma.event.findUnique({ where: { slug } });

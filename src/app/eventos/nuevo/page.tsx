@@ -1,4 +1,5 @@
 import { createEvent } from "../actions";
+import { DateTimeFields } from "@/components/DateTimeFields";
 
 export default function NuevoEventoPage() {
   return (
@@ -28,14 +29,8 @@ export default function NuevoEventoPage() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="label" htmlFor="startAt">Fecha y hora de inicio</label>
-            <input className="input" id="startAt" name="startAt" type="datetime-local" required />
-          </div>
-          <div>
-            <label className="label" htmlFor="endAt">Fecha y hora de término</label>
-            <input className="input" id="endAt" name="endAt" type="datetime-local" />
-          </div>
+          <DateTimeFields namePrefix="start" label="Fecha y hora de inicio" required />
+          <DateTimeFields namePrefix="end" label="Fecha y hora de término (opcional)" />
         </div>
         <div>
           <label className="label" htmlFor="location">Lugar (si es presencial/híbrido)</label>
