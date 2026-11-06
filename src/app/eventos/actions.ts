@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/email";
 import { buildEmail } from "@/lib/email-templates";
 import { getBaseUrl } from "@/lib/url";
+import { zonedTimeToUtc } from "@/lib/dates";
 
 function combineDateTime(formData: FormData, prefix: string): Date | null {
   const date = String(formData.get(`${prefix}Date`) || "");
@@ -15,7 +16,7 @@ function combineDateTime(formData: FormData, prefix: string): Date | null {
   const [y, m, d] = date.split("-").map(Number);
   const hour = Number(formData.get(`${prefix}Hour`) || 0);
   const minute = Number(formData.get(`${prefix}Minute`) || 0);
-  const parsed = new Date(y, m - 1, d, hour, minute);
+  const parsed = zonedTimeToUtc(y, m, d, hour, minute);
   return isNaN(parsed.getTime()) ? null : parsed;
 }
 
