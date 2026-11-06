@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { normalizeRut, formatRut, isValidRut } from "@/lib/rut";
-import { TimelineType } from "@/lib/enums";
+import { TimelineType, NoteSentiment } from "@/lib/enums";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -78,9 +78,11 @@ export async function addNote(contactId: string, formData: FormData) {
   "use server";
   const text = String(formData.get("note") || "").trim();
   const authorName = String(formData.get("author") || "").trim() || null;
+  const sentimentRaw = String(formData.get("sentiment") || "NEUTRA");
+  const sentiment = sentimentRaw in NoteSentiment ? sentimentRaw : NoteSentiment.NEUTRA;
   if (!text) return;
   await prisma.timelineEvent.create({
-    data: { contactId, type: TimelineType.NOTE, title: "Nota", description: text, authorName },
+    data: { contactId, type: TimelineType.NOTE, title: "Nota", description: text, authorName, sentiment },
   });
   if (authorName) {
     cookies().set(AUTHOR_COOKIE, authorName, { maxAge: 60 * 60 * 24 * 365, path: "/" });

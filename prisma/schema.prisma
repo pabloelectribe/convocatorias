@@ -228,6 +228,8 @@ model TimelineEvent {
   title       String
   description String?
   authorName  String?
+  /// solo aplica a type=NOTE: POSITIVA | NEUTRA | NEGATIVA (ver src/lib/enums.ts)
+  sentiment   String?
 
   contactId String
   contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)

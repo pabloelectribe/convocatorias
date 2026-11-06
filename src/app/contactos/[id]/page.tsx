@@ -7,6 +7,7 @@ import { addNote, addToSegment, removeFromSegment, addTagToContact, removeTagFro
 import { logTouchFromContactPage } from "../../campanas/actions";
 import { AUTHOR_COOKIE } from "@/lib/constants";
 import { TIMELINE_LABEL, TIMELINE_BADGE_CLASS as TIMELINE_COLOR } from "@/lib/timeline";
+import { NOTE_SENTIMENT_LABEL, NOTE_SENTIMENT_BADGE_CLASS, NoteSentiment } from "@/lib/enums";
 import { ContactTimelineChart } from "@/components/charts/ContactTimelineChart";
 
 export const dynamic = "force-dynamic";
@@ -221,6 +222,11 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
             <h2 className="font-medium mb-3">Historial (timeline 360°)</h2>
             <form action={addNote.bind(null, contact.id)} className="flex gap-2 mb-4">
               <input className="input" name="note" placeholder="Agregar una nota sobre este cliente..." required />
+              <select className="input max-w-[130px]" name="sentiment" defaultValue={NoteSentiment.NEUTRA}>
+                {Object.values(NoteSentiment).map((s) => (
+                  <option key={s} value={s}>{NOTE_SENTIMENT_LABEL[s]}</option>
+                ))}
+              </select>
               <input className="input max-w-[160px]" name="author" placeholder="Tu nombre" defaultValue={savedAuthorName} />
               <button className="btn-secondary shrink-0" type="submit">Agregar</button>
             </form>
@@ -233,6 +239,11 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
                   <div>
                     <p>
                       {a.title}
+                      {a.type === "NOTE" && a.sentiment && a.sentiment !== "NEUTRA" && (
+                        <span className={`badge ml-2 ${NOTE_SENTIMENT_BADGE_CLASS[a.sentiment as NoteSentiment]}`}>
+                          {NOTE_SENTIMENT_LABEL[a.sentiment as NoteSentiment]}
+                        </span>
+                      )}
                       {a.event ? (
                         <>
                           {" "}

@@ -49,6 +49,25 @@ export const EMAIL_TYPE_LABEL: Record<EmailType, string> = {
   CONFIRMACION: "Confirmación",
 };
 
+export const NoteSentiment = {
+  POSITIVA: "POSITIVA",
+  NEUTRA: "NEUTRA",
+  NEGATIVA: "NEGATIVA",
+} as const;
+export type NoteSentiment = (typeof NoteSentiment)[keyof typeof NoteSentiment];
+
+export const NOTE_SENTIMENT_LABEL: Record<NoteSentiment, string> = {
+  POSITIVA: "Positiva",
+  NEUTRA: "Neutra",
+  NEGATIVA: "Negativa",
+};
+
+export const NOTE_SENTIMENT_BADGE_CLASS: Record<NoteSentiment, string> = {
+  POSITIVA: "bg-green-100 text-green-700",
+  NEUTRA: "bg-slate-100 text-slate-600",
+  NEGATIVA: "bg-red-100 text-red-700",
+};
+
 export const TimelineType = {
   CONTACT_CREATED: "CONTACT_CREATED",
   IMPORT: "IMPORT",
