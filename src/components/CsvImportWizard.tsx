@@ -81,8 +81,8 @@ export function CsvImportWizard<K extends string>({
       const p = await previewAction(text);
       setPreview(p);
       setMapping(computeAutoMap(p.headers, autoMapRules, singleColumnFallbackKey));
-    } catch {
-      setError("No se pudo leer el archivo CSV. Verifica el formato.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo leer el archivo CSV. Verifica el formato.");
     } finally {
       setLoading(false);
     }
