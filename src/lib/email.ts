@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 
-let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+// Tipado laxo a propósito: con `pool: true` nodemailer resuelve un overload cuyo tipo de
+// retorno no coincide con el de la firma por defecto, y esto es solo estado interno del módulo.
+let transporter: nodemailer.Transporter<unknown> | null = null;
 
 function getTransporter() {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return null;
@@ -8,7 +10,10 @@ function getTransporter() {
     transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
-    });
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
+    }) as nodemailer.Transporter<unknown>;
   }
   return transporter;
 }

@@ -195,28 +195,46 @@ export async function sendInvitationTypeEmail(invitationId: string, type: EmailT
   return result;
 }
 
-export async function sendInvitationEmails(eventId: string) {
+const EMAIL_CONCURRENCY = 5;
+
+async function mapWithConcurrency<T>(items: T[], limit: number, fn: (item: T) => Promise<{ ok: boolean }>): Promise<{ sent: number; failed: number }> {
+  let sent = 0;
+  let failed = 0;
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const item = items[next++];
+      const result = await fn(item);
+      if (result.ok) sent++;
+      else failed++;
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return { sent, failed };
+}
+
+export async function sendInvitationEmails(eventId: string): Promise<{ sent: number; failed: number }> {
   "use server";
   const invitations = await prisma.invitation.findMany({
     where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] } },
   });
-  for (const inv of invitations) {
-    await sendInvitationTypeEmail(inv.id, EmailType.INVITACION);
-  }
+  const result = await mapWithConcurrency(invitations, EMAIL_CONCURRENCY, (inv) => sendInvitationTypeEmail(inv.id, EmailType.INVITACION));
   revalidatePath(`/eventos/${eventId}`);
+  return result;
 }
 
-export async function sendReminderEmails(eventId: string) {
+export async function sendReminderEmails(eventId: string): Promise<{ sent: number; failed: number }> {
   "use server";
   const invitations = await prisma.invitation.findMany({
     where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] } },
     include: { emails: true },
   });
-  for (const inv of invitations) {
+  const result = await mapWithConcurrency(invitations, EMAIL_CONCURRENCY, (inv) => {
     const type = inv.emails.length > 0 ? EmailType.REINSISTENCIA : EmailType.RECORDATORIO;
-    await sendInvitationTypeEmail(inv.id, type);
-  }
+    return sendInvitationTypeEmail(inv.id, type);
+  });
   revalidatePath(`/eventos/${eventId}`);
+  return result;
 }
 
 export async function resendInvitationEmail(eventId: string, invitationId: string) {

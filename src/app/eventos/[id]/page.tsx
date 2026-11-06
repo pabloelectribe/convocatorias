@@ -1,15 +1,18 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, pct } from "@/lib/format";
 import { inviteSegment, inviteContact, updateEventStatus, sendInvitationEmails, sendReminderEmails, resendInvitationEmail } from "../actions";
 import { EMAIL_TYPE_LABEL, INVITATION_STATUS_LABEL, InvitationStatus } from "@/lib/enums";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export const dynamic = "force-dynamic";
+// Enviar correos a muchos invitados puede tardar más que el límite por defecto de Vercel.
+export const maxDuration = 60;
 
 const MODALITY_LABEL: Record<string, string> = { ZOOM: "Zoom", PRESENCIAL: "Presencial", HIBRIDO: "Híbrido" };
 
-export default async function EventoDetailPage({ params }: { params: { id: string } }) {
+export default async function EventoDetailPage({ params, searchParams }: { params: { id: string }; searchParams: { emailMsg?: string; emailOk?: string } }) {
   const event = await prisma.event.findUnique({
     where: { id: params.id },
     include: {
@@ -46,6 +49,21 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
   const registeredCount = event.registrations.length;
   const attendedCount = event.attendances.length;
   const publicUrl = `/e/${event.slug}`;
+  const eventId = event.id;
+
+  async function sendInvitesAction() {
+    "use server";
+    const { sent, failed } = await sendInvitationEmails(eventId);
+    const msg = `Invitaciones enviadas: ${sent}${failed ? `, fallidas: ${failed}` : ""}.`;
+    redirect(`/eventos/${eventId}?emailOk=${failed ? "0" : "1"}&emailMsg=${encodeURIComponent(msg)}`);
+  }
+
+  async function sendRemindersAction() {
+    "use server";
+    const { sent, failed } = await sendReminderEmails(eventId);
+    const msg = `Recordatorios enviados: ${sent}${failed ? `, fallidos: ${failed}` : ""}.`;
+    redirect(`/eventos/${eventId}?emailOk=${failed ? "0" : "1"}&emailMsg=${encodeURIComponent(msg)}`);
+  }
 
   return (
     <div className="space-y-6">
@@ -65,13 +83,19 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
         <Link href={publicUrl} target="_blank" className="btn-secondary">Ver página pública ↗</Link>
         <Link href={`/eventos/${event.id}/checkin`} className="btn-secondary">Check-in de asistentes</Link>
         <a href={`/api/export/eventos/${event.id}`} className="btn-secondary">⬇ Descargar CSV</a>
-        <form action={sendInvitationEmails.bind(null, event.id)}>
-          <button className="btn-secondary" type="submit">✉ Enviar invitaciones por correo</button>
+        <form action={sendInvitesAction}>
+          <SubmitButton pendingLabel="Enviando invitaciones...">✉ Enviar invitaciones por correo</SubmitButton>
         </form>
-        <form action={sendReminderEmails.bind(null, event.id)}>
-          <button className="btn-secondary" type="submit">✉ Enviar recordatorio a pendientes</button>
+        <form action={sendRemindersAction}>
+          <SubmitButton pendingLabel="Enviando recordatorios...">✉ Enviar recordatorio a pendientes</SubmitButton>
         </form>
       </div>
+
+      {searchParams.emailMsg && (
+        <p className={`text-sm rounded-md p-3 ${searchParams.emailOk === "1" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+          {searchParams.emailMsg}
+        </p>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <MetricCard label="Invitados" value={invitedCount} />
@@ -136,11 +160,7 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
                   {r.invitation ? (
                     r.invitation.contact.email ? (
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500">
-                          {r.invitation.emails[0]
-                            ? `${EMAIL_TYPE_LABEL[r.invitation.emails[0].type as keyof typeof EMAIL_TYPE_LABEL] ?? r.invitation.emails[0].type}${r.invitation.emails[0].success ? "" : " (falló)"}`
-                            : "Sin enviar"}
-                        </span>
+                        <EmailStatusBadge lastEmail={r.invitation.emails[0]} />
                         {r.invitation.status !== "REGISTRADA" && r.invitation.status !== "DECLINADA" && (
                           <form action={resendInvitationEmail.bind(null, event.id, r.invitation.id)}>
                             <button className="text-brand-600 hover:underline" type="submit">Reenviar</button>
@@ -197,5 +217,24 @@ function StatusForm({ eventId, status }: { eventId: string; status: string }) {
         </button>
       ))}
     </form>
+  );
+}
+
+function EmailStatusBadge({ lastEmail }: { lastEmail?: { type: string; success: boolean } }) {
+  if (!lastEmail) {
+    return <span className="badge bg-slate-100 text-slate-500">Aún sin enviar</span>;
+  }
+  const typeLabel = EMAIL_TYPE_LABEL[lastEmail.type as keyof typeof EMAIL_TYPE_LABEL] ?? lastEmail.type;
+  if (!lastEmail.success) {
+    return (
+      <span className="badge bg-red-50 text-red-700" title={`Último intento: ${typeLabel}`}>
+        Falló el envío
+      </span>
+    );
+  }
+  return (
+    <span className="badge bg-green-50 text-green-700" title={`Último correo: ${typeLabel}`}>
+      Enviado exitoso ({typeLabel})
+    </span>
   );
 }
