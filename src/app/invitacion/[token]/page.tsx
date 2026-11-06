@@ -1,25 +1,11 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { fullName } from "@/lib/format";
-import { getZonedParts } from "@/lib/dates";
+import { fullName, formatLongDate, formatEventTime } from "@/lib/format";
 import { respondInvitation } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 const MODALITY_LABEL: Record<string, string> = { ZOOM: "Zoom (en línea)", PRESENCIAL: "Presencial", HIBRIDO: "Híbrido (presencial y Zoom)" };
-const WEEKDAYS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-
-function formatLongDate(date: Date): string {
-  const p = getZonedParts(date);
-  const weekday = WEEKDAYS[new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay()];
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${p.day} de ${MONTHS[p.month - 1]}, ${p.year}`;
-}
-
-function formatTime(date: Date): string {
-  const p = getZonedParts(date);
-  return `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")} hrs`;
-}
 
 export default async function InvitacionPage({ params }: { params: { token: string } }) {
   const invitation = await prisma.invitation.findUnique({
@@ -53,7 +39,7 @@ export default async function InvitacionPage({ params }: { params: { token: stri
 
           <div className="rounded-xl border border-brand-100 bg-brand-50 p-5 space-y-2.5">
             <p className="text-lg font-bold text-brand-800">📅 {formatLongDate(event.startAt)}</p>
-            <p className="text-lg font-bold text-brand-800">🕒 {formatTime(event.startAt)}</p>
+            <p className="text-lg font-bold text-brand-800">🕒 {formatEventTime(event.startAt)}</p>
             <p className="text-lg font-bold text-brand-800">📍 {locationLine}</p>
           </div>
 

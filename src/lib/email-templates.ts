@@ -1,10 +1,7 @@
 import { EmailType } from "./enums";
-import { fullName } from "./format";
-import { getZonedParts } from "./dates";
+import { fullName, formatLongDate, formatEventTime } from "./format";
 
 const MODALITY_LABEL: Record<string, string> = { ZOOM: "Zoom (en línea)", PRESENCIAL: "Presencial", HIBRIDO: "Híbrido (presencial y Zoom)" };
-const WEEKDAYS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 type EventLite = {
   title: string;
@@ -20,17 +17,6 @@ const GREEN = "#1a5c43";
 const GREEN_DARK = "#174a37";
 const GREEN_PANEL_BG = "#eff8f4";
 const GREEN_PANEL_BORDER = "#d7efe3";
-
-function formatLongDate(date: Date): string {
-  const p = getZonedParts(date);
-  const weekday = WEEKDAYS[new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay()];
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${p.day} de ${MONTHS[p.month - 1]}, ${p.year}`;
-}
-
-function formatTime(date: Date): string {
-  const p = getZonedParts(date);
-  return `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")} hrs`;
-}
 
 /** Convierte saltos de línea del texto libre en párrafos con buen formato, en vez de un bloque de texto plano. */
 function formatDescription(text: string): string {
@@ -64,7 +50,7 @@ function eventDateTimePanel(event: EventLite): string {
   return `
     <div style="background: ${GREEN_PANEL_BG}; border: 1px solid ${GREEN_PANEL_BORDER}; border-radius: 12px; padding: 18px 20px; margin: 0 0 22px;">
       <p style="margin: 0 0 10px; font-size: 18px; font-weight: bold; color: ${GREEN_DARK};">📅 ${formatLongDate(event.startAt)}</p>
-      <p style="margin: 0 0 10px; font-size: 18px; font-weight: bold; color: ${GREEN_DARK};">🕒 ${formatTime(event.startAt)}</p>
+      <p style="margin: 0 0 10px; font-size: 18px; font-weight: bold; color: ${GREEN_DARK};">🕒 ${formatEventTime(event.startAt)}</p>
       <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${GREEN_DARK};">📍 ${locationLine}</p>
     </div>`;
 }
