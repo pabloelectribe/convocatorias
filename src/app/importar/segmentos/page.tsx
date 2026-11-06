@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportKind } from "@/lib/enums";
-import { CsvImportWizard, type ImportFieldLabel } from "@/components/CsvImportWizard";
+import { CsvImportWizard, type ImportFieldLabel, type AutoMapRule } from "@/components/CsvImportWizard";
 import { ImportBatchHistory } from "@/components/ImportBatchHistory";
 import { previewCsv, confirmImport, type CsvMapping } from "./actions";
 
@@ -13,16 +13,11 @@ const FIELD_LABELS: ImportFieldLabel<keyof CsvMapping>[] = [
   { key: "segmentName", label: "Nombre del segmento", required: true },
 ];
 
-function autoMap(headers: string[]): Partial<CsvMapping> {
-  const auto: Partial<CsvMapping> = {};
-  for (const h of headers) {
-    const norm = h.toLowerCase();
-    if (norm.includes("rut")) auto.rut = h;
-    else if (norm.includes("mail") || norm.includes("correo")) auto.email = h;
-    else if (norm.includes("segmento") || norm.includes("lista") || norm.includes("grupo")) auto.segmentName = h;
-  }
-  return auto;
-}
+const AUTO_MAP_RULES: AutoMapRule<keyof CsvMapping>[] = [
+  { key: "rut", keywords: ["rut"] },
+  { key: "email", keywords: ["mail", "correo"] },
+  { key: "segmentName", keywords: ["segmento", "lista", "grupo"] },
+];
 
 export default async function ImportarSegmentosPage() {
   const batches = await prisma.importBatch.findMany({ where: { kind: ImportKind.SEGMENTOS }, orderBy: { importedAt: "desc" }, take: 20 });
@@ -44,7 +39,7 @@ export default async function ImportarSegmentosPage() {
 
       <CsvImportWizard
         fieldLabels={FIELD_LABELS}
-        autoMap={autoMap}
+        autoMapRules={AUTO_MAP_RULES}
         previewAction={previewCsv}
         confirmAction={confirmImport}
         fileHint="Selecciona el archivo CSV de segmentos"

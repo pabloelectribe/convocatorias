@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportKind } from "@/lib/enums";
-import { CsvImportWizard, type ImportFieldLabel } from "@/components/CsvImportWizard";
+import { CsvImportWizard, type ImportFieldLabel, type AutoMapRule } from "@/components/CsvImportWizard";
 import { ImportBatchHistory } from "@/components/ImportBatchHistory";
 import { previewCsv, confirmImport, type CsvMapping } from "./actions";
 
@@ -21,24 +21,19 @@ const FIELD_LABELS: ImportFieldLabel<keyof CsvMapping>[] = [
   { key: "activity", label: "Actividad / formulario (si no es un evento con ficha propia)" },
 ];
 
-function autoMap(headers: string[]): Partial<CsvMapping> {
-  const auto: Partial<CsvMapping> = {};
-  for (const h of headers) {
-    const norm = h.toLowerCase();
-    if (norm.includes("rut")) auto.rut = h;
-    else if (norm.includes("mail") || norm.includes("correo")) auto.email = h;
-    else if (norm.includes("nombre") && !norm.includes("apellido")) auto.firstName = h;
-    else if (norm.includes("apellido")) auto.lastName = h;
-    else if (norm.includes("empresa") || norm.includes("razon")) auto.companyName = h;
-    else if (norm.includes("fono") || norm.includes("telefono")) auto.phone = h;
-    else if (norm.includes("evento")) auto.eventName = h;
-    else if (norm.includes("actividad") || norm.includes("formulario")) auto.activity = h;
-    else if (norm.includes("inscrip")) auto.registeredAt = h;
-    else if (norm.includes("fecha")) auto.date = h;
-    else if (norm.includes("canal") || norm.includes("origen")) auto.channel = h;
-  }
-  return auto;
-}
+const AUTO_MAP_RULES: AutoMapRule<keyof CsvMapping>[] = [
+  { key: "rut", keywords: ["rut"] },
+  { key: "email", keywords: ["mail", "correo"] },
+  { key: "firstName", keywords: ["nombre"], exclude: ["apellido"] },
+  { key: "lastName", keywords: ["apellido"] },
+  { key: "companyName", keywords: ["empresa", "razon"] },
+  { key: "phone", keywords: ["fono", "telefono"] },
+  { key: "eventName", keywords: ["evento"] },
+  { key: "activity", keywords: ["actividad", "formulario"] },
+  { key: "registeredAt", keywords: ["inscrip"] },
+  { key: "date", keywords: ["fecha"] },
+  { key: "channel", keywords: ["canal", "origen"] },
+];
 
 export default async function ImportarContactosPage() {
   const batches = await prisma.importBatch.findMany({ where: { kind: ImportKind.CONTACTOS }, orderBy: { importedAt: "desc" }, take: 20 });
@@ -60,7 +55,7 @@ export default async function ImportarContactosPage() {
 
       <CsvImportWizard
         fieldLabels={FIELD_LABELS}
-        autoMap={autoMap}
+        autoMapRules={AUTO_MAP_RULES}
         previewAction={previewCsv}
         confirmAction={confirmImport}
         fileHint="Selecciona el archivo CSV de contactos"

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportKind } from "@/lib/enums";
-import { CsvImportWizard, type ImportFieldLabel } from "@/components/CsvImportWizard";
+import { CsvImportWizard, type ImportFieldLabel, type AutoMapRule } from "@/components/CsvImportWizard";
 import { ImportBatchHistory } from "@/components/ImportBatchHistory";
 import { previewCsv, confirmImport, type CsvMapping } from "./actions";
 
@@ -11,15 +11,9 @@ const FIELD_LABELS: ImportFieldLabel<keyof CsvMapping>[] = [
   { key: "name", label: "Nombre del canal", required: true },
 ];
 
-function autoMap(headers: string[]): Partial<CsvMapping> {
-  const auto: Partial<CsvMapping> = {};
-  for (const h of headers) {
-    const norm = h.toLowerCase();
-    if (norm.includes("canal") || norm.includes("nombre") || norm.includes("origen")) auto.name = h;
-  }
-  if (!auto.name && headers.length === 1) auto.name = headers[0];
-  return auto;
-}
+const AUTO_MAP_RULES: AutoMapRule<keyof CsvMapping>[] = [
+  { key: "name", keywords: ["canal", "nombre", "origen"] },
+];
 
 export default async function ImportarCanalesPage() {
   const batches = await prisma.importBatch.findMany({ where: { kind: ImportKind.CANALES }, orderBy: { importedAt: "desc" }, take: 20 });
@@ -39,7 +33,8 @@ export default async function ImportarCanalesPage() {
 
       <CsvImportWizard
         fieldLabels={FIELD_LABELS}
-        autoMap={autoMap}
+        autoMapRules={AUTO_MAP_RULES}
+        singleColumnFallbackKey="name"
         previewAction={previewCsv}
         confirmAction={confirmImport}
         fileHint="Selecciona el archivo CSV de canales"

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportKind } from "@/lib/enums";
-import { CsvImportWizard, type ImportFieldLabel } from "@/components/CsvImportWizard";
+import { CsvImportWizard, type ImportFieldLabel, type AutoMapRule } from "@/components/CsvImportWizard";
 import { ImportBatchHistory } from "@/components/ImportBatchHistory";
 import { previewCsv, confirmImport, type CsvMapping } from "./actions";
 
@@ -20,23 +20,18 @@ const FIELD_LABELS: ImportFieldLabel<keyof CsvMapping>[] = [
   { key: "status", label: "Estado (Borrador/Publicado/Finalizado/Cancelado)" },
 ];
 
-function autoMap(headers: string[]): Partial<CsvMapping> {
-  const auto: Partial<CsvMapping> = {};
-  for (const h of headers) {
-    const norm = h.toLowerCase();
-    if (norm.includes("titulo") || norm === "evento") auto.title = h;
-    else if (norm.includes("termino") || norm.includes("fin")) auto.endAt = h;
-    else if (norm.includes("inicio") || norm.includes("fecha")) auto.startAt = h;
-    else if (norm.includes("modalidad")) auto.modality = h;
-    else if (norm.includes("lugar") || norm.includes("direccion")) auto.location = h;
-    else if (norm.includes("zoom")) auto.zoomLink = h;
-    else if (norm.includes("tematica") || norm.includes("categoria")) auto.topic = h;
-    else if (norm.includes("descripcion")) auto.description = h;
-    else if (norm.includes("capacidad") || norm.includes("cupos")) auto.capacity = h;
-    else if (norm.includes("estado")) auto.status = h;
-  }
-  return auto;
-}
+const AUTO_MAP_RULES: AutoMapRule<keyof CsvMapping>[] = [
+  { key: "title", keywords: ["titulo", "evento"] },
+  { key: "endAt", keywords: ["termino", "fin"] },
+  { key: "startAt", keywords: ["inicio", "fecha"] },
+  { key: "modality", keywords: ["modalidad"] },
+  { key: "location", keywords: ["lugar", "direccion"] },
+  { key: "zoomLink", keywords: ["zoom"] },
+  { key: "topic", keywords: ["tematica", "categoria"] },
+  { key: "description", keywords: ["descripcion"] },
+  { key: "capacity", keywords: ["capacidad", "cupos"] },
+  { key: "status", keywords: ["estado"] },
+];
 
 export default async function ImportarEventosPage() {
   const batches = await prisma.importBatch.findMany({ where: { kind: ImportKind.EVENTOS }, orderBy: { importedAt: "desc" }, take: 20 });
@@ -57,7 +52,7 @@ export default async function ImportarEventosPage() {
 
       <CsvImportWizard
         fieldLabels={FIELD_LABELS}
-        autoMap={autoMap}
+        autoMapRules={AUTO_MAP_RULES}
         previewAction={previewCsv}
         confirmAction={confirmImport}
         fileHint="Selecciona el archivo CSV de eventos"

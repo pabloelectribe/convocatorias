@@ -9,6 +9,15 @@ export interface ImportFieldLabel<K extends string> {
   required?: boolean;
 }
 
+/** Regla de auto-mapeo: si el encabezado (en minúsculas) contiene alguna keyword (y ninguna de exclude), se asigna a `key`.
+ *  Se evalúan en orden por cada encabezado; la primera regla que calce gana. Es solo datos (no funciones), para poder
+ *  pasarlo desde un Server Component a este Client Component. */
+export interface AutoMapRule<K extends string> {
+  key: K;
+  keywords: string[];
+  exclude?: string[];
+}
+
 export interface ImportResult {
   createdCount: number;
   updatedCount: number;
@@ -16,16 +25,36 @@ export interface ImportResult {
   rowCount: number;
 }
 
+function computeAutoMap<K extends string>(headers: string[], rules: AutoMapRule<K>[], singleColumnFallbackKey?: K): Partial<Record<K, string>> {
+  const result: Partial<Record<K, string>> = {};
+  for (const h of headers) {
+    const norm = h.toLowerCase();
+    for (const rule of rules) {
+      const matches = rule.keywords.some((kw) => norm.includes(kw)) && !rule.exclude?.some((ex) => norm.includes(ex));
+      if (matches) {
+        result[rule.key] = h;
+        break;
+      }
+    }
+  }
+  if (singleColumnFallbackKey && !result[singleColumnFallbackKey] && headers.length === 1) {
+    result[singleColumnFallbackKey] = headers[0];
+  }
+  return result;
+}
+
 export function CsvImportWizard<K extends string>({
   fieldLabels,
-  autoMap,
+  autoMapRules,
+  singleColumnFallbackKey,
   previewAction,
   confirmAction,
   fileHint,
   resultLabels,
 }: {
   fieldLabels: ImportFieldLabel<K>[];
-  autoMap: (headers: string[]) => Partial<Record<K, string>>;
+  autoMapRules: AutoMapRule<K>[];
+  singleColumnFallbackKey?: K;
   previewAction: (fileText: string) => Promise<CsvPreview>;
   confirmAction: (fileText: string, filename: string, mapping: Partial<Record<K, string>>) => Promise<ImportResult>;
   fileHint: string;
@@ -51,7 +80,7 @@ export function CsvImportWizard<K extends string>({
     try {
       const p = await previewAction(text);
       setPreview(p);
-      setMapping(autoMap(p.headers));
+      setMapping(computeAutoMap(p.headers, autoMapRules, singleColumnFallbackKey));
     } catch {
       setError("No se pudo leer el archivo CSV. Verifica el formato.");
     } finally {
