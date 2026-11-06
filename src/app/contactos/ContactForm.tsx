@@ -10,6 +10,7 @@ export interface ContactFormValues {
   phone?: string | null;
   companyName?: string | null;
   sector?: string | null;
+  businessSegment?: string | null;
   comuna?: string | null;
   region?: string | null;
   channelId?: string | null;
@@ -59,11 +60,17 @@ export function ContactForm({
           <input className="input" id="companyName" name="companyName" defaultValue={v.companyName || ""} />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="label" htmlFor="sector">Sector</label>
-          <input className="input" id="sector" name="sector" defaultValue={v.sector || ""} />
+          <label className="label" htmlFor="sector">Rubro</label>
+          <input className="input" id="sector" name="sector" placeholder="Ej: Gastronomía, Construcción, Retail..." defaultValue={v.sector || ""} />
         </div>
+        <div>
+          <label className="label" htmlFor="businessSegment">Banca / Tamaño de empresa</label>
+          <input className="input" id="businessSegment" name="businessSegment" placeholder="Ej: Banca Microempresa, Banca Pyme..." defaultValue={v.businessSegment || ""} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
         <RegionComunaSelect defaultRegion={v.region} defaultComuna={v.comuna} />
       </div>
       <div>

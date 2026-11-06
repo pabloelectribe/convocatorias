@@ -14,6 +14,8 @@ export interface CsvMapping {
   firstName?: string;
   lastName?: string;
   companyName?: string;
+  sector?: string;
+  businessSegment?: string;
   phone?: string;
   activity?: string;
   date?: string;
@@ -82,6 +84,8 @@ export async function confirmImport(fileText: string, filename: string, mapping:
       const firstName = mapping.firstName ? row[mapping.firstName]?.trim() : undefined;
       const lastName = mapping.lastName ? row[mapping.lastName]?.trim() : undefined;
       const companyName = mapping.companyName ? row[mapping.companyName]?.trim() : undefined;
+      const sector = mapping.sector ? row[mapping.sector]?.trim() : undefined;
+      const businessSegment = mapping.businessSegment ? row[mapping.businessSegment]?.trim() : undefined;
       const phone = mapping.phone ? row[mapping.phone]?.trim() : undefined;
       const activity = mapping.activity ? row[mapping.activity]?.trim() : undefined;
       const dateRaw = mapping.date ? row[mapping.date] : undefined;
@@ -105,6 +109,8 @@ export async function confirmImport(fileText: string, filename: string, mapping:
             firstName: contact.firstName || firstName || undefined,
             lastName: contact.lastName || lastName || undefined,
             companyName: contact.companyName || companyName || undefined,
+            sector: contact.sector || sector || undefined,
+            businessSegment: contact.businessSegment || businessSegment || undefined,
             phone: contact.phone || phone || undefined,
             channelId: contact.channelId || channelId,
           },
@@ -112,7 +118,7 @@ export async function confirmImport(fileText: string, filename: string, mapping:
         updatedCount++;
       } else {
         contact = await prisma.contact.create({
-          data: { rut, email: email || null, firstName, lastName, companyName, phone, channelId },
+          data: { rut, email: email || null, firstName, lastName, companyName, sector, businessSegment, phone, channelId },
         });
         await prisma.timelineEvent.create({
           data: { contactId: contact.id, type: TimelineType.CONTACT_CREATED, title: "Contacto creado", description: `Importado desde ${filename}`, occurredAt },

@@ -87,6 +87,9 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
             <Field label="RUT" value={rutDisplay(contact.rut)} />
             <Field label="Email" value={contact.email} />
             <Field label="Teléfono" value={contact.phone} />
+            <Field label="Empresa" value={contact.companyName} />
+            <Field label="Rubro" value={contact.sector} />
+            <Field label="Banca / Tamaño de empresa" value={contact.businessSegment} />
             <Field label="Comuna" value={contact.comuna} />
             <Field label="Región" value={contact.region} />
             <Field label="Canal de origen" value={contact.channel?.name} />

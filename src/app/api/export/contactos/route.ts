@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   });
 
   const rows: string[][] = [
-    ["Nombre", "RUT", "Email", "Teléfono", "Empresa", "Sector", "Comuna", "Región", "Canal de origen", "Temas de interés"],
+    ["Nombre", "RUT", "Email", "Teléfono", "Empresa", "Rubro", "Banca / Tamaño de empresa", "Comuna", "Región", "Canal de origen", "Temas de interés"],
   ];
   for (const c of contacts) {
     rows.push([
@@ -33,6 +33,7 @@ export async function GET(req: Request) {
       c.phone || "",
       c.companyName || "",
       c.sector || "",
+      c.businessSegment || "",
       c.comuna || "",
       c.region || "",
       c.channel?.name || "",

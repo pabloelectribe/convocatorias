@@ -23,6 +23,7 @@ model Contact {
   phone       String?
   companyName String?
   sector      String?
+  businessSegment String?
   comuna      String?
   region      String?
   notes       String?

@@ -16,6 +16,7 @@ export async function createContact(formData: FormData) {
   const phone = String(formData.get("phone") || "").trim() || null;
   const companyName = String(formData.get("companyName") || "").trim() || null;
   const sector = String(formData.get("sector") || "").trim() || null;
+  const businessSegment = String(formData.get("businessSegment") || "").trim() || null;
   const comuna = String(formData.get("comuna") || "").trim() || null;
   const region = String(formData.get("region") || "").trim() || null;
   const channelId = String(formData.get("channelId") || "").trim() || null;
@@ -26,7 +27,7 @@ export async function createContact(formData: FormData) {
   const rut = rutRaw ? formatRut(rutRaw) : null;
 
   const contact = await prisma.contact.create({
-    data: { rut, email, firstName, lastName, phone, companyName, sector, comuna, region, channelId },
+    data: { rut, email, firstName, lastName, phone, companyName, sector, businessSegment, comuna, region, channelId },
   });
 
   await prisma.timelineEvent.create({
@@ -46,6 +47,7 @@ export async function updateContact(contactId: string, formData: FormData) {
   const phone = String(formData.get("phone") || "").trim() || null;
   const companyName = String(formData.get("companyName") || "").trim() || null;
   const sector = String(formData.get("sector") || "").trim() || null;
+  const businessSegment = String(formData.get("businessSegment") || "").trim() || null;
   const comuna = String(formData.get("comuna") || "").trim() || null;
   const region = String(formData.get("region") || "").trim() || null;
   const channelId = String(formData.get("channelId") || "").trim() || null;
@@ -66,7 +68,7 @@ export async function updateContact(contactId: string, formData: FormData) {
 
   await prisma.contact.update({
     where: { id: contactId },
-    data: { rut, email, firstName, lastName, phone, companyName, sector, comuna, region, channelId },
+    data: { rut, email, firstName, lastName, phone, companyName, sector, businessSegment, comuna, region, channelId },
   });
 
   revalidatePath("/contactos");
