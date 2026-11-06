@@ -2,9 +2,12 @@
 
 import { prisma } from "@/lib/prisma";
 import { slugify, ticketCode } from "@/lib/slug";
-import { EventModality, TimelineType, RegistrationSource } from "@/lib/enums";
+import { EventModality, TimelineType, RegistrationSource, EmailType, EMAIL_TYPE_LABEL } from "@/lib/enums";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
+import { buildEmail } from "@/lib/email-templates";
+import { getBaseUrl } from "@/lib/url";
 
 export async function createEvent(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
@@ -106,6 +109,67 @@ export async function checkInByQuery(eventId: string, formData: FormData) {
   revalidatePath(`/eventos/${eventId}`);
   revalidatePath(`/eventos/${eventId}/checkin`);
   return { ok: true, message: `Check-in exitoso: ${registration.contact.firstName} ${registration.contact.lastName}` };
+}
+
+export async function sendInvitationTypeEmail(invitationId: string, type: EmailType) {
+  "use server";
+  const invitation = await prisma.invitation.findUnique({
+    where: { id: invitationId },
+    include: { event: true, contact: true },
+  });
+  if (!invitation || !invitation.contact.email) {
+    return { ok: false, error: "El contacto no tiene email registrado." };
+  }
+
+  const link = `${getBaseUrl()}/invitacion/${invitation.token}`;
+  const { subject, html } = buildEmail(type, invitation.event, invitation.contact, link);
+  const result = await sendEmail({ to: invitation.contact.email, subject, html });
+
+  await prisma.emailLog.create({
+    data: { invitationId, type, success: result.ok, error: result.error },
+  });
+  if (result.ok) {
+    await prisma.timelineEvent.create({
+      data: {
+        contactId: invitation.contactId,
+        eventId: invitation.eventId,
+        type: TimelineType.INVITED,
+        title: `Correo enviado: ${EMAIL_TYPE_LABEL[type]}`,
+        description: invitation.event.title,
+      },
+    });
+  }
+  return result;
+}
+
+export async function sendInvitationEmails(eventId: string) {
+  "use server";
+  const invitations = await prisma.invitation.findMany({
+    where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] } },
+  });
+  for (const inv of invitations) {
+    await sendInvitationTypeEmail(inv.id, EmailType.INVITACION);
+  }
+  revalidatePath(`/eventos/${eventId}`);
+}
+
+export async function sendReminderEmails(eventId: string) {
+  "use server";
+  const invitations = await prisma.invitation.findMany({
+    where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] } },
+    include: { emails: true },
+  });
+  for (const inv of invitations) {
+    const type = inv.emails.length > 0 ? EmailType.REINSISTENCIA : EmailType.RECORDATORIO;
+    await sendInvitationTypeEmail(inv.id, type);
+  }
+  revalidatePath(`/eventos/${eventId}`);
+}
+
+export async function resendInvitationEmail(eventId: string, invitationId: string) {
+  "use server";
+  await sendInvitationTypeEmail(invitationId, EmailType.REINSISTENCIA);
+  revalidatePath(`/eventos/${eventId}`);
 }
 
 export async function registerContactDirectly(eventId: string, contactId: string, source: RegistrationSource) {

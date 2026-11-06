@@ -34,6 +34,21 @@ export const RegistrationSource = {
 } as const;
 export type RegistrationSource = (typeof RegistrationSource)[keyof typeof RegistrationSource];
 
+export const EmailType = {
+  INVITACION: "INVITACION",
+  RECORDATORIO: "RECORDATORIO",
+  REINSISTENCIA: "REINSISTENCIA",
+  CONFIRMACION: "CONFIRMACION",
+} as const;
+export type EmailType = (typeof EmailType)[keyof typeof EmailType];
+
+export const EMAIL_TYPE_LABEL: Record<EmailType, string> = {
+  INVITACION: "Invitación",
+  RECORDATORIO: "Recordatorio",
+  REINSISTENCIA: "Reinsistencia",
+  CONFIRMACION: "Confirmación",
+};
+
 export const TimelineType = {
   CONTACT_CREATED: "CONTACT_CREATED",
   IMPORT: "IMPORT",

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, pct } from "@/lib/format";
-import { inviteSegment, inviteContact, updateEventStatus } from "../actions";
+import { inviteSegment, inviteContact, updateEventStatus, sendInvitationEmails, sendReminderEmails, resendInvitationEmail } from "../actions";
+import { EMAIL_TYPE_LABEL } from "@/lib/enums";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
   const event = await prisma.event.findUnique({
     where: { id: params.id },
     include: {
-      invitations: { include: { contact: true } },
+      invitations: { include: { contact: true, emails: { orderBy: { sentAt: "desc" } } } },
       registrations: { include: { contact: true } },
       attendances: true,
     },
@@ -63,6 +64,12 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
         <Link href={publicUrl} target="_blank" className="btn-secondary">Ver página pública ↗</Link>
         <Link href={`/eventos/${event.id}/checkin`} className="btn-secondary">Check-in de asistentes</Link>
         <a href={`/api/export/eventos/${event.id}`} className="btn-secondary">⬇ Descargar CSV</a>
+        <form action={sendInvitationEmails.bind(null, event.id)}>
+          <button className="btn-secondary" type="submit">✉ Enviar invitaciones por correo</button>
+        </form>
+        <form action={sendReminderEmails.bind(null, event.id)}>
+          <button className="btn-secondary" type="submit">✉ Enviar recordatorio a pendientes</button>
+        </form>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -100,6 +107,7 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
               <th className="px-4 py-2 font-medium">Contacto</th>
               <th className="px-4 py-2 font-medium">Estado invitación</th>
               <th className="px-4 py-2 font-medium">Enlace</th>
+              <th className="px-4 py-2 font-medium">Correo</th>
               <th className="px-4 py-2 font-medium">Inscrito</th>
               <th className="px-4 py-2 font-medium">Ticket</th>
               <th className="px-4 py-2 font-medium">Asistió</th>
@@ -121,13 +129,33 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
                     </Link>
                   ) : "—"}
                 </td>
+                <td className="px-4 py-2 text-xs">
+                  {r.invitation ? (
+                    r.invitation.contact.email ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500">
+                          {r.invitation.emails[0]
+                            ? `${EMAIL_TYPE_LABEL[r.invitation.emails[0].type as keyof typeof EMAIL_TYPE_LABEL] ?? r.invitation.emails[0].type}${r.invitation.emails[0].success ? "" : " (falló)"}`
+                            : "Sin enviar"}
+                        </span>
+                        {r.invitation.status !== "REGISTRADA" && r.invitation.status !== "DECLINADA" && (
+                          <form action={resendInvitationEmail.bind(null, event.id, r.invitation.id)}>
+                            <button className="text-brand-600 hover:underline" type="submit">Reenviar</button>
+                          </form>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-amber-600">Sin email</span>
+                    )
+                  ) : "—"}
+                </td>
                 <td className="px-4 py-2">{r.registration ? "✅" : "—"}</td>
                 <td className="px-4 py-2 text-slate-500 font-mono text-xs">{r.registration?.ticketCode || "—"}</td>
                 <td className="px-4 py-2">{r.attended ? "✅" : "—"}</td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Aún no hay invitados ni inscritos.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">Aún no hay invitados ni inscritos.</td></tr>
             )}
           </tbody>
         </table>

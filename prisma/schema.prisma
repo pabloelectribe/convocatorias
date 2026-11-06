@@ -127,7 +127,21 @@ model Invitation {
   segmentId String?
   segment   Segment? @relation(fields: [segmentId], references: [id])
 
+  emails EmailLog[]
+
   @@unique([eventId, contactId])
+}
+
+/// type: INVITACION | RECORDATORIO | REINSISTENCIA | CONFIRMACION (ver src/lib/enums.ts)
+model EmailLog {
+  id      String   @id @default(cuid())
+  type    String
+  sentAt  DateTime @default(now())
+  success Boolean  @default(true)
+  error   String?
+
+  invitationId String
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
 }
 
 /// source: INVITACION | AUTOINSCRIPCION | IMPORTACION (ver src/lib/enums.ts)

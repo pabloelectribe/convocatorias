@@ -1,9 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { TimelineType, InvitationStatus } from "@/lib/enums";
+import { TimelineType, InvitationStatus, EmailType } from "@/lib/enums";
 import { ticketCode } from "@/lib/slug";
 import { revalidatePath } from "next/cache";
+import { sendInvitationTypeEmail } from "@/app/eventos/actions";
 
 export async function respondInvitation(token: string, response: "confirm" | "decline") {
   "use server";
@@ -31,6 +32,7 @@ export async function respondInvitation(token: string, response: "confirm" | "de
     await prisma.timelineEvent.create({
       data: { contactId: invitation.contactId, eventId: invitation.eventId, type: TimelineType.REGISTERED, title: "Confirmó su inscripción vía invitación" },
     });
+    await sendInvitationTypeEmail(invitation.id, EmailType.CONFIRMACION);
   }
   revalidatePath(`/invitacion/${token}`);
 }
