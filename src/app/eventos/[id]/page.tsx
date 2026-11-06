@@ -61,6 +61,7 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
 
       <div className="flex flex-wrap items-center gap-2">
         <StatusForm eventId={event.id} status={event.status} />
+        <Link href={`/eventos/${event.id}/editar`} className="btn-secondary">✎ Editar evento</Link>
         <Link href={publicUrl} target="_blank" className="btn-secondary">Ver página pública ↗</Link>
         <Link href={`/eventos/${event.id}/checkin`} className="btn-secondary">Check-in de asistentes</Link>
         <a href={`/api/export/eventos/${event.id}`} className="btn-secondary">⬇ Descargar CSV</a>

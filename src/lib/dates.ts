@@ -15,3 +15,14 @@ export function parseFlexibleDate(raw: string): Date | null {
 
   return null;
 }
+
+/** Descompone una fecha en los valores que esperan los selects de fecha/hora/minutos (24h, hora local). */
+export function toDateTimeParts(date: Date | null | undefined): { date: string; hour: string; minute: string } {
+  if (!date) return { date: "", hour: "09", minute: "00" };
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return {
+    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    hour: pad(date.getHours()),
+    minute: pad(Math.round(date.getMinutes() / 15) * 15 === 60 ? 0 : Math.round(date.getMinutes() / 15) * 15),
+  };
+}

@@ -45,6 +45,30 @@ export async function createEvent(formData: FormData) {
   redirect(`/eventos/${event.id}`);
 }
 
+export async function updateEvent(eventId: string, formData: FormData) {
+  "use server";
+  const title = String(formData.get("title") || "").trim();
+  const description = String(formData.get("description") || "").trim() || null;
+  const topic = String(formData.get("topic") || "").trim() || null;
+  const modality = String(formData.get("modality") || "ZOOM") as EventModality;
+  const location = String(formData.get("location") || "").trim() || null;
+  const zoomLink = String(formData.get("zoomLink") || "").trim() || null;
+  const startAt = combineDateTime(formData, "start");
+  const endAt = combineDateTime(formData, "end");
+  const capacityRaw = String(formData.get("capacity") || "");
+  const capacity = capacityRaw ? parseInt(capacityRaw, 10) : null;
+
+  if (!title || !startAt) throw new Error("Título y fecha de inicio son obligatorios");
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { title, description, topic, modality, location, zoomLink, startAt, endAt, capacity },
+  });
+
+  revalidatePath(`/eventos/${eventId}`);
+  redirect(`/eventos/${eventId}`);
+}
+
 export async function updateEventStatus(eventId: string, status: "BORRADOR" | "PUBLICADO" | "FINALIZADO" | "CANCELADO") {
   "use server";
   await prisma.event.update({ where: { id: eventId }, data: { status } });
