@@ -178,8 +178,10 @@ model Attendance {
 // Importación de datos externos (CSV manual de vamosmipyme.cl)
 // ---------------------------------------------------------------------------
 
+/// kind: CONTACTOS | EVENTOS | SEGMENTOS | CANALES (ver src/lib/enums.ts)
 model ImportBatch {
   id           String   @id @default(cuid())
+  kind         String   @default("CONTACTOS")
   filename     String
   importedAt   DateTime @default(now())
   rowCount     Int

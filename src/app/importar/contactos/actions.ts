@@ -1,11 +1,11 @@
 "use server";
 
-import { parse } from "csv-parse/sync";
 import { prisma } from "@/lib/prisma";
 import { normalizeRut, formatRut, isValidRut } from "@/lib/rut";
 import { parseFlexibleDate } from "@/lib/dates";
-import { TimelineType, RegistrationSource } from "@/lib/enums";
+import { TimelineType, RegistrationSource, ImportKind } from "@/lib/enums";
 import { slugify, ticketCode } from "@/lib/slug";
+import { parseCsvText, previewRows, type CsvPreview } from "@/lib/csv-import";
 import { revalidatePath } from "next/cache";
 
 export interface CsvMapping {
@@ -22,26 +22,9 @@ export interface CsvMapping {
   registeredAt?: string;
 }
 
-export interface CsvPreview {
-  headers: string[];
-  sampleRows: Record<string, string>[];
-  rowCount: number;
-}
-
-function parseCsvText(text: string): Record<string, string>[] {
-  return parse(text, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
-    bom: true,
-  });
-}
-
 export async function previewCsv(fileText: string): Promise<CsvPreview> {
   "use server";
-  const rows = parseCsvText(fileText);
-  const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
-  return { headers, sampleRows: rows.slice(0, 5), rowCount: rows.length };
+  return previewRows(fileText);
 }
 
 export interface ImportResult {
@@ -179,11 +162,13 @@ export async function confirmImport(fileText: string, filename: string, mapping:
   }
 
   await prisma.importBatch.create({
-    data: { filename, rowCount: rows.length, createdCount, updatedCount, errorCount },
+    data: { kind: ImportKind.CONTACTOS, filename, rowCount: rows.length, createdCount, updatedCount, errorCount },
   });
 
   revalidatePath("/importar");
+  revalidatePath("/importar/contactos");
   revalidatePath("/contactos");
+  revalidatePath("/eventos");
   revalidatePath("/");
 
   return { createdCount, updatedCount, errorCount, rowCount: rows.length };

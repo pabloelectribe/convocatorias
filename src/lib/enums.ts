@@ -34,6 +34,21 @@ export const RegistrationSource = {
 } as const;
 export type RegistrationSource = (typeof RegistrationSource)[keyof typeof RegistrationSource];
 
+export const ImportKind = {
+  CONTACTOS: "CONTACTOS",
+  EVENTOS: "EVENTOS",
+  SEGMENTOS: "SEGMENTOS",
+  CANALES: "CANALES",
+} as const;
+export type ImportKind = (typeof ImportKind)[keyof typeof ImportKind];
+
+export const IMPORT_KIND_LABEL: Record<ImportKind, string> = {
+  CONTACTOS: "Contactos",
+  EVENTOS: "Eventos",
+  SEGMENTOS: "Segmentos",
+  CANALES: "Canales",
+};
+
 export const EmailType = {
   INVITACION: "INVITACION",
   RECORDATORIO: "RECORDATORIO",

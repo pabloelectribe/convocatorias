@@ -1,27 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { previewCsv, confirmImport, type CsvPreview, type CsvMapping, type ImportResult } from "./actions";
+import type { CsvPreview } from "@/lib/csv-import";
 
-const FIELD_LABELS: Array<{ key: keyof CsvMapping; label: string; required?: boolean }> = [
-  { key: "rut", label: "RUT" },
-  { key: "email", label: "Email", required: true },
-  { key: "firstName", label: "Nombre" },
-  { key: "lastName", label: "Apellido" },
-  { key: "companyName", label: "Empresa" },
-  { key: "phone", label: "Teléfono" },
-  { key: "channel", label: "Canal de origen" },
-  { key: "eventName", label: "Evento al que asistió" },
-  { key: "date", label: "Fecha de asistencia" },
-  { key: "registeredAt", label: "Fecha de inscripción (opcional)" },
-  { key: "activity", label: "Actividad / formulario (si no es un evento con ficha propia)" },
-];
+export interface ImportFieldLabel<K extends string> {
+  key: K;
+  label: string;
+  required?: boolean;
+}
 
-export function ImportWizard() {
+export interface ImportResult {
+  createdCount: number;
+  updatedCount: number;
+  errorCount: number;
+  rowCount: number;
+}
+
+export function CsvImportWizard<K extends string>({
+  fieldLabels,
+  autoMap,
+  previewAction,
+  confirmAction,
+  fileHint,
+  resultLabels,
+}: {
+  fieldLabels: ImportFieldLabel<K>[];
+  autoMap: (headers: string[]) => Partial<Record<K, string>>;
+  previewAction: (fileText: string) => Promise<CsvPreview>;
+  confirmAction: (fileText: string, filename: string, mapping: Partial<Record<K, string>>) => Promise<ImportResult>;
+  fileHint: string;
+  resultLabels: { created: string; updated: string };
+}) {
   const [fileText, setFileText] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("");
   const [preview, setPreview] = useState<CsvPreview | null>(null);
-  const [mapping, setMapping] = useState<CsvMapping>({});
+  const [mapping, setMapping] = useState<Partial<Record<K, string>>>({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,25 +49,10 @@ export function ImportWizard() {
     setFileText(text);
     setLoading(true);
     try {
-      const p = await previewCsv(text);
+      const p = await previewAction(text);
       setPreview(p);
-      const auto: CsvMapping = {};
-      for (const h of p.headers) {
-        const norm = h.toLowerCase();
-        if (norm.includes("rut")) auto.rut = h;
-        else if (norm.includes("mail") || norm.includes("correo")) auto.email = h;
-        else if (norm.includes("nombre") && !norm.includes("apellido")) auto.firstName = h;
-        else if (norm.includes("apellido")) auto.lastName = h;
-        else if (norm.includes("empresa") || norm.includes("razon")) auto.companyName = h;
-        else if (norm.includes("fono") || norm.includes("telefono")) auto.phone = h;
-        else if (norm.includes("evento")) auto.eventName = h;
-        else if (norm.includes("actividad") || norm.includes("formulario")) auto.activity = h;
-        else if (norm.includes("inscrip")) auto.registeredAt = h;
-        else if (norm.includes("fecha")) auto.date = h;
-        else if (norm.includes("canal") || norm.includes("origen")) auto.channel = h;
-      }
-      setMapping(auto);
-    } catch (err) {
+      setMapping(autoMap(p.headers));
+    } catch {
       setError("No se pudo leer el archivo CSV. Verifica el formato.");
     } finally {
       setLoading(false);
@@ -66,21 +64,23 @@ export function ImportWizard() {
     setLoading(true);
     setError(null);
     try {
-      const r = await confirmImport(fileText, filename, mapping);
+      const r = await confirmAction(fileText, filename, mapping);
       setResult(r);
       setPreview(null);
       setFileText(null);
-    } catch (err) {
+    } catch {
       setError("Ocurrió un error al importar. Revisa el mapeo de columnas.");
     } finally {
       setLoading(false);
     }
   }
 
+  const requiredOk = fieldLabels.filter((f) => f.required).every((f) => mapping[f.key]);
+
   return (
     <div className="space-y-4">
       <div className="card p-4">
-        <label className="label" htmlFor="csvfile">Selecciona el archivo CSV exportado desde vamosmipyme.cl</label>
+        <label className="label" htmlFor="csvfile">{fileHint}</label>
         <input id="csvfile" type="file" accept=".csv,text/csv" onChange={onFile} className="text-sm" />
         {loading && <p className="text-sm text-slate-500 mt-2">Procesando...</p>}
         {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
@@ -93,7 +93,7 @@ export function ImportWizard() {
             <p className="text-sm text-slate-500">{preview.rowCount} filas detectadas. Indica qué columna corresponde a cada campo.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
-            {FIELD_LABELS.map((f) => (
+            {fieldLabels.map((f) => (
               <div key={f.key}>
                 <label className="label">{f.label}{f.required && " *"}</label>
                 <select
@@ -134,10 +134,10 @@ export function ImportWizard() {
             </div>
           </div>
 
-          <button className="btn-primary" onClick={onConfirm} disabled={loading || !mapping.email}>
+          <button className="btn-primary" onClick={onConfirm} disabled={loading || !requiredOk}>
             {loading ? "Importando..." : `Importar ${preview.rowCount} filas`}
           </button>
-          {!mapping.email && <p className="text-xs text-amber-600">Debes mapear al menos el campo Email para poder importar.</p>}
+          {!requiredOk && <p className="text-xs text-amber-600">Debes mapear los campos obligatorios (*) para poder importar.</p>}
         </div>
       )}
 
@@ -145,7 +145,7 @@ export function ImportWizard() {
         <div className="card p-4 bg-green-50 border-green-200 text-green-800">
           <p className="font-medium">Importación completada</p>
           <p className="text-sm">
-            {result.rowCount} filas procesadas · {result.createdCount} contactos nuevos · {result.updatedCount} actualizados · {result.errorCount} con errores.
+            {result.rowCount} filas procesadas · {result.createdCount} {resultLabels.created} · {result.updatedCount} {resultLabels.updated} · {result.errorCount} con errores.
           </p>
         </div>
       )}
