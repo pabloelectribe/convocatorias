@@ -104,6 +104,22 @@ export async function addToSegment(contactId: string, formData: FormData) {
   revalidatePath(`/contactos/${contactId}`);
 }
 
+export async function bulkAddToSegment(formData: FormData) {
+  "use server";
+  const segmentId = String(formData.get("segmentId") || "");
+  const contactIds = formData.getAll("contactIds").map(String);
+  if (!segmentId || contactIds.length === 0) return;
+
+  await prisma.segmentMember.createMany({
+    data: contactIds.map((contactId) => ({ segmentId, contactId })),
+    skipDuplicates: true,
+  });
+
+  revalidatePath("/contactos");
+  revalidatePath("/segmentos");
+  for (const contactId of contactIds) revalidatePath(`/contactos/${contactId}`);
+}
+
 export async function removeFromSegment(contactId: string, segmentId: string) {
   "use server";
   await prisma.segmentMember.delete({ where: { segmentId_contactId: { segmentId, contactId } } }).catch(() => {});
