@@ -22,6 +22,7 @@ export interface CsvMapping {
   channel?: string;
   eventName?: string;
   registeredAt?: string;
+  segmentName?: string;
 }
 
 export async function previewCsv(fileText: string): Promise<CsvPreview> {
@@ -51,6 +52,16 @@ export async function confirmImport(fileText: string, filename: string, mapping:
     const channel = await prisma.channel.upsert({ where: { name: key }, update: {}, create: { name: key } });
     channelCache.set(key, channel.id);
     return channel.id;
+  }
+
+  const segmentCache = new Map<string, string>();
+  async function getOrCreateSegmentId(name: string): Promise<string> {
+    const key = name.trim();
+    if (segmentCache.has(key)) return segmentCache.get(key)!;
+    let segment = await prisma.segment.findFirst({ where: { name: { equals: key, mode: "insensitive" } } });
+    if (!segment) segment = await prisma.segment.create({ data: { name: key } });
+    segmentCache.set(key, segment.id);
+    return segment.id;
   }
 
   const eventCache = new Map<string, string>();
@@ -92,6 +103,7 @@ export async function confirmImport(fileText: string, filename: string, mapping:
       const channelName = mapping.channel ? row[mapping.channel]?.trim() : undefined;
       const eventName = mapping.eventName ? row[mapping.eventName]?.trim() : undefined;
       const registeredAtRaw = mapping.registeredAt ? row[mapping.registeredAt] : undefined;
+      const segmentName = mapping.segmentName ? row[mapping.segmentName]?.trim() : undefined;
 
       const occurredAt = dateRaw ? parseFlexibleDate(dateRaw) || new Date() : new Date();
       const channelId = channelName ? await getChannelId(channelName) : undefined;
@@ -124,6 +136,15 @@ export async function confirmImport(fileText: string, filename: string, mapping:
           data: { contactId: contact.id, type: TimelineType.CONTACT_CREATED, title: "Contacto creado", description: `Importado desde ${filename}`, occurredAt },
         });
         createdCount++;
+      }
+
+      if (segmentName) {
+        const segmentId = await getOrCreateSegmentId(segmentName);
+        await prisma.segmentMember.upsert({
+          where: { segmentId_contactId: { segmentId, contactId: contact.id } },
+          update: {},
+          create: { segmentId, contactId: contact.id },
+        });
       }
 
       if (eventName) {
@@ -175,6 +196,7 @@ export async function confirmImport(fileText: string, filename: string, mapping:
   revalidatePath("/importar/contactos");
   revalidatePath("/contactos");
   revalidatePath("/eventos");
+  revalidatePath("/segmentos");
   revalidatePath("/");
 
   return { createdCount, updatedCount, errorCount, rowCount: rows.length };

@@ -17,6 +17,7 @@ const FIELD_LABELS: ImportFieldLabel<keyof CsvMapping>[] = [
   { key: "businessSegment", label: "Banca / Tamaño de empresa" },
   { key: "phone", label: "Teléfono" },
   { key: "channel", label: "Canal de origen" },
+  { key: "segmentName", label: "Segmento a asignar" },
   { key: "eventName", label: "Evento al que asistió (historial)" },
   { key: "date", label: "Fecha de asistencia" },
   { key: "registeredAt", label: "Fecha de inscripción (opcional)" },
@@ -32,6 +33,7 @@ const AUTO_MAP_RULES: AutoMapRule<keyof CsvMapping>[] = [
   { key: "businessSegment", keywords: ["banca", "tamano", "tamaño"] },
   { key: "sector", keywords: ["rubro", "sector", "categoria"] },
   { key: "phone", keywords: ["fono", "telefono"] },
+  { key: "segmentName", keywords: ["segmento", "lista", "grupo"] },
   { key: "eventName", keywords: ["evento"] },
   { key: "activity", keywords: ["actividad", "formulario"] },
   { key: "registeredAt", keywords: ["inscrip"] },
@@ -49,8 +51,10 @@ export default async function ImportarContactosPage() {
           <h1 className="text-xl font-semibold">Importar contactos</h1>
           <p className="text-sm text-slate-500">
             Sube el CSV exportado manualmente desde vamosmipyme.cl, o una base histórica de clientes. Se identifican por RUT
-            o email: si ya existen, se enriquecen sus datos; si son nuevos, se crean. Si mapeas la columna "Evento al que
-            asistió", además registra su inscripción y asistencia a ese evento (lo crea si no existe).
+            o email: si ya existen, se enriquecen sus datos; si son nuevos, se crean. Si mapeas la columna "Segmento a
+            asignar", además los agrega a ese segmento (lo crea si no existe) — usa el mismo valor en todas las filas para
+            asignar toda la base a un solo segmento, o distintos valores por fila para repartirlos. Si mapeas "Evento al
+            que asistió", además registra su inscripción y asistencia a ese evento (lo crea si no existe).
           </p>
           <Link href="/importar" className="text-sm text-brand-600 hover:underline">← Volver a importaciones</Link>
         </div>

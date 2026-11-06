@@ -14,6 +14,7 @@ export interface ContactRow {
   companyName: string | null;
   channel: { name: string } | null;
   tags: { tagId: string; tag: { name: string } }[];
+  segments: { segmentId: string; segment: { name: string } }[];
 }
 
 export function ContactsTable({ contacts, segments }: { contacts: ContactRow[]; segments: { id: string; name: string }[] }) {
@@ -68,6 +69,7 @@ export function ContactsTable({ contacts, segments }: { contacts: ContactRow[]; 
               <th className="px-4 py-2 font-medium">RUT</th>
               <th className="px-4 py-2 font-medium">Empresa</th>
               <th className="px-4 py-2 font-medium">Canal</th>
+              <th className="px-4 py-2 font-medium">Segmentos</th>
               <th className="px-4 py-2 font-medium">Temas</th>
             </tr>
           </thead>
@@ -88,6 +90,14 @@ export function ContactsTable({ contacts, segments }: { contacts: ContactRow[]; 
                 <td className="px-4 py-2 text-slate-600">{c.channel?.name || "—"}</td>
                 <td className="px-4 py-2">
                   <div className="flex flex-wrap gap-1">
+                    {c.segments.map((s) => (
+                      <span key={s.segmentId} className="badge bg-slate-100 text-slate-700">{s.segment.name}</span>
+                    ))}
+                    {c.segments.length === 0 && <span className="text-slate-300">—</span>}
+                  </div>
+                </td>
+                <td className="px-4 py-2">
+                  <div className="flex flex-wrap gap-1">
                     {c.tags.map((t) => (
                       <span key={t.tagId} className="badge bg-brand-50 text-brand-700">{t.tag.name}</span>
                     ))}
@@ -97,7 +107,7 @@ export function ContactsTable({ contacts, segments }: { contacts: ContactRow[]; 
             ))}
             {contacts.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">Sin resultados.</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">Sin resultados.</td>
               </tr>
             )}
           </tbody>

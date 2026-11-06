@@ -19,7 +19,7 @@ export default async function ContactosPage({ searchParams }: { searchParams: { 
             ],
           }
         : undefined,
-      include: { channel: true, tags: { include: { tag: true } } },
+      include: { channel: true, tags: { include: { tag: true } }, segments: { include: { segment: true } } },
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
