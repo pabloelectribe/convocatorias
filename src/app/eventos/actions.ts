@@ -111,6 +111,29 @@ export async function inviteContact(eventId: string, formData: FormData) {
   revalidatePath(`/eventos/${eventId}`);
 }
 
+async function markAttended(eventId: string, contactId: string) {
+  await prisma.attendance.upsert({
+    where: { eventId_contactId: { eventId, contactId } },
+    update: {},
+    create: { eventId, contactId },
+  });
+  const alreadyLogged = await prisma.timelineEvent.findFirst({
+    where: { eventId, contactId, type: TimelineType.ATTENDED },
+  });
+  if (!alreadyLogged) {
+    await prisma.timelineEvent.create({
+      data: { contactId, eventId, type: TimelineType.ATTENDED, title: "Asistió al evento (check-in)" },
+    });
+  }
+  revalidatePath(`/eventos/${eventId}`);
+  revalidatePath(`/eventos/${eventId}/checkin`);
+}
+
+export async function checkInContact(eventId: string, contactId: string) {
+  "use server";
+  await markAttended(eventId, contactId);
+}
+
 export async function checkInByQuery(eventId: string, formData: FormData) {
   "use server";
   const query = String(formData.get("query") || "").trim();
@@ -123,25 +146,21 @@ export async function checkInByQuery(eventId: string, formData: FormData) {
     },
     include: { contact: true },
   });
-
-  if (!registration) return { ok: false, message: "No se encontró una inscripción con ese dato." };
-
-  await prisma.attendance.upsert({
-    where: { eventId_contactId: { eventId, contactId: registration.contactId } },
-    update: {},
-    create: { eventId, contactId: registration.contactId },
-  });
-  const alreadyLogged = await prisma.timelineEvent.findFirst({
-    where: { eventId, contactId: registration.contactId, type: TimelineType.ATTENDED },
-  });
-  if (!alreadyLogged) {
-    await prisma.timelineEvent.create({
-      data: { contactId: registration.contactId, eventId, type: TimelineType.ATTENDED, title: "Asistió al evento (check-in)" },
-    });
+  if (registration) {
+    await markAttended(eventId, registration.contactId);
+    return { ok: true, message: `Check-in exitoso: ${registration.contact.firstName} ${registration.contact.lastName}` };
   }
-  revalidatePath(`/eventos/${eventId}`);
-  revalidatePath(`/eventos/${eventId}/checkin`);
-  return { ok: true, message: `Check-in exitoso: ${registration.contact.firstName} ${registration.contact.lastName}` };
+
+  const contact = await prisma.contact.findFirst({
+    where: { OR: [{ rut: query }, { email: query }] },
+  });
+  const invited = contact ? await prisma.invitation.findUnique({ where: { eventId_contactId: { eventId, contactId: contact.id } } }) : null;
+  if (contact && invited) {
+    await markAttended(eventId, contact.id);
+    return { ok: true, message: `Check-in exitoso: ${contact.firstName} ${contact.lastName}` };
+  }
+
+  return { ok: false, message: "No se encontró una inscripción o invitación con ese dato." };
 }
 
 export async function sendInvitationTypeEmail(invitationId: string, type: EmailType) {
