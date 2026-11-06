@@ -13,9 +13,10 @@ export default async function ImportarPage() {
         <div>
           <h1 className="text-xl font-semibold">Importar datos de vamosmipyme.cl</h1>
           <p className="text-sm text-slate-500">
-            Sube el CSV exportado manualmente desde la plataforma (registros en formularios o actividades). Los contactos se
-            identifican por RUT o email: si ya existen, se enriquecen sus datos y se agrega el hito al historial 360°; si son
-            nuevos, se crean automáticamente.
+            Sube el CSV exportado manualmente desde la plataforma (registros en formularios o actividades), o una base
+            histórica de asistentes a charlas pasadas. Los contactos se identifican por RUT o email: si ya existen, se
+            enriquecen sus datos; si son nuevos, se crean automáticamente. Si mapeas la columna "Evento al que asistió", el
+            sistema crea el evento si no existe y registra la inscripción y asistencia de cada contacto en su ficha 360°.
           </p>
         </div>
         <a href="/api/plantilla-importacion" className="btn-secondary shrink-0">⬇ Plantilla de ejemplo</a>

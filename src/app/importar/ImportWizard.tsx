@@ -10,9 +10,11 @@ const FIELD_LABELS: Array<{ key: keyof CsvMapping; label: string; required?: boo
   { key: "lastName", label: "Apellido" },
   { key: "companyName", label: "Empresa" },
   { key: "phone", label: "Teléfono" },
-  { key: "activity", label: "Actividad / formulario registrado" },
-  { key: "date", label: "Fecha de la actividad" },
   { key: "channel", label: "Canal de origen" },
+  { key: "eventName", label: "Evento al que asistió" },
+  { key: "date", label: "Fecha de asistencia" },
+  { key: "registeredAt", label: "Fecha de inscripción (opcional)" },
+  { key: "activity", label: "Actividad / formulario (si no es un evento con ficha propia)" },
 ];
 
 export function ImportWizard() {
@@ -45,7 +47,9 @@ export function ImportWizard() {
         else if (norm.includes("apellido")) auto.lastName = h;
         else if (norm.includes("empresa") || norm.includes("razon")) auto.companyName = h;
         else if (norm.includes("fono") || norm.includes("telefono")) auto.phone = h;
-        else if (norm.includes("actividad") || norm.includes("evento") || norm.includes("formulario")) auto.activity = h;
+        else if (norm.includes("evento")) auto.eventName = h;
+        else if (norm.includes("actividad") || norm.includes("formulario")) auto.activity = h;
+        else if (norm.includes("inscrip")) auto.registeredAt = h;
         else if (norm.includes("fecha")) auto.date = h;
         else if (norm.includes("canal") || norm.includes("origen")) auto.channel = h;
       }
