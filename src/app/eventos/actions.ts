@@ -215,8 +215,10 @@ async function mapWithConcurrency<T>(items: T[], limit: number, fn: (item: T) =>
 
 export async function sendInvitationEmails(eventId: string): Promise<{ sent: number; failed: number }> {
   "use server";
+  // Solo a quienes nunca recibieron un correo de este evento: evita duplicar invitaciones si se
+  // aprieta el botón más de una vez (para reenviar a quien ya recibió algo está "Enviar recordatorio").
   const invitations = await prisma.invitation.findMany({
-    where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] } },
+    where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] }, emails: { none: {} } },
   });
   const result = await mapWithConcurrency(invitations, EMAIL_CONCURRENCY, (inv) => sendInvitationTypeEmail(inv.id, EmailType.INVITACION));
   revalidatePath(`/eventos/${eventId}`);
