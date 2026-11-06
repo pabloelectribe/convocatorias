@@ -4,6 +4,7 @@ import "./globals.css";
 import { Nav } from "@/components/nav";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, isValidSessionToken } from "@/lib/auth";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         {authed && <Nav />}
         <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6">{children}</main>
+        <Analytics />
       </body>
     </html>
   );
