@@ -3,15 +3,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { fullName } from "@/lib/format";
 import { checkInByQuery, checkInContact } from "../../actions";
+import { INVITATION_STATUS_LABEL } from "@/lib/enums";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_LABEL: Record<string, string> = {
-  ENVIADA: "Invitado",
-  ABIERTA: "Invitado",
-  REGISTRADA: "Confirmado",
-  DECLINADA: "Declinó",
-};
+const STATUS_LABEL: Record<string, string> = INVITATION_STATUS_LABEL;
 
 export default async function CheckinPage({ params, searchParams }: { params: { id: string }; searchParams: { msg?: string; ok?: string } }) {
   const event = await prisma.event.findUnique({

@@ -27,6 +27,15 @@ export const InvitationStatus = {
 } as const;
 export type InvitationStatus = (typeof InvitationStatus)[keyof typeof InvitationStatus];
 
+/** Etiqueta pensada para no confundirse con el envío de correo: esto es el estado de la invitación
+ *  dentro del sistema (si la persona fue agregada, confirmó o declinó), no si ya se le mandó un email. */
+export const INVITATION_STATUS_LABEL: Record<InvitationStatus, string> = {
+  ENVIADA: "Invitado (pendiente)",
+  ABIERTA: "Invitado (pendiente)",
+  REGISTRADA: "Confirmó asistencia",
+  DECLINADA: "Declinó",
+};
+
 export const RegistrationSource = {
   INVITACION: "INVITACION",
   AUTOINSCRIPCION: "AUTOINSCRIPCION",

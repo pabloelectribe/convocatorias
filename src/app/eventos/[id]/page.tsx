@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, fullName, pct } from "@/lib/format";
 import { inviteSegment, inviteContact, updateEventStatus, sendInvitationEmails, sendReminderEmails, resendInvitationEmail } from "../actions";
-import { EMAIL_TYPE_LABEL } from "@/lib/enums";
+import { EMAIL_TYPE_LABEL, INVITATION_STATUS_LABEL, InvitationStatus } from "@/lib/enums";
 
 export const dynamic = "force-dynamic";
 
@@ -106,9 +106,9 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
               <th className="px-4 py-2 font-medium">Contacto</th>
-              <th className="px-4 py-2 font-medium">Estado invitación</th>
+              <th className="px-4 py-2 font-medium">Estado en el sistema</th>
               <th className="px-4 py-2 font-medium">Enlace</th>
-              <th className="px-4 py-2 font-medium">Correo</th>
+              <th className="px-4 py-2 font-medium">Correo enviado</th>
               <th className="px-4 py-2 font-medium">Inscrito</th>
               <th className="px-4 py-2 font-medium">Ticket</th>
               <th className="px-4 py-2 font-medium">Asistió</th>
@@ -122,7 +122,9 @@ export default async function EventoDetailPage({ params }: { params: { id: strin
                     {fullName(r.contact)}
                   </Link>
                 </td>
-                <td className="px-4 py-2 text-slate-600">{r.invitation ? r.invitation.status : "Sin invitación (autoinscrito)"}</td>
+                <td className="px-4 py-2 text-slate-600">
+                  {r.invitation ? INVITATION_STATUS_LABEL[r.invitation.status as InvitationStatus] ?? r.invitation.status : "Sin invitación (autoinscrito)"}
+                </td>
                 <td className="px-4 py-2 text-xs">
                   {r.invitation ? (
                     <Link href={`/invitacion/${r.invitation.token}`} target="_blank" className="text-brand-600 hover:underline">
