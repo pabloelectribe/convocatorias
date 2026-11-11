@@ -196,6 +196,11 @@ export async function sendInvitationTypeEmail(invitationId: string, type: EmailT
 }
 
 const EMAIL_CONCURRENCY = 5;
+// Vercel corta la función a los 60s (tope del plan). Enviar de a muchos de golpe (ej. 100+) se
+// cortaba a mitad de camino sin terminar ninguno. Se procesa en lotes que sí alcanzan a completarse
+// dentro del tiempo, y el usuario repite el clic hasta cubrir el resto (el filtro "nunca recibió
+// correo" hace que cada clic avance sobre los que faltan, sin reenviar a quien ya recibió uno).
+const EMAIL_BATCH_SIZE = 30;
 
 async function mapWithConcurrency<T>(items: T[], limit: number, fn: (item: T) => Promise<{ ok: boolean }>): Promise<{ sent: number; failed: number }> {
   let sent = 0;
@@ -213,30 +218,29 @@ async function mapWithConcurrency<T>(items: T[], limit: number, fn: (item: T) =>
   return { sent, failed };
 }
 
-export async function sendInvitationEmails(eventId: string): Promise<{ sent: number; failed: number }> {
+export async function sendInvitationEmails(eventId: string): Promise<{ sent: number; failed: number; remaining: number }> {
   "use server";
   // Solo a quienes nunca recibieron un correo de este evento: evita duplicar invitaciones si se
   // aprieta el botón más de una vez (para reenviar a quien ya recibió algo está "Enviar recordatorio").
-  const invitations = await prisma.invitation.findMany({
-    where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] }, emails: { none: {} } },
-  });
+  const where = { eventId, status: { in: ["ENVIADA", "ABIERTA"] }, emails: { none: {} } };
+  const totalPending = await prisma.invitation.count({ where });
+  const invitations = await prisma.invitation.findMany({ where, take: EMAIL_BATCH_SIZE });
   const result = await mapWithConcurrency(invitations, EMAIL_CONCURRENCY, (inv) => sendInvitationTypeEmail(inv.id, EmailType.INVITACION));
   revalidatePath(`/eventos/${eventId}`);
-  return result;
+  return { ...result, remaining: totalPending - invitations.length };
 }
 
-export async function sendReminderEmails(eventId: string): Promise<{ sent: number; failed: number }> {
+export async function sendReminderEmails(eventId: string): Promise<{ sent: number; failed: number; remaining: number }> {
   "use server";
-  const invitations = await prisma.invitation.findMany({
-    where: { eventId, status: { in: ["ENVIADA", "ABIERTA"] } },
-    include: { emails: true },
-  });
+  const where = { eventId, status: { in: ["ENVIADA", "ABIERTA"] } };
+  const totalPending = await prisma.invitation.count({ where });
+  const invitations = await prisma.invitation.findMany({ where, include: { emails: true }, take: EMAIL_BATCH_SIZE });
   const result = await mapWithConcurrency(invitations, EMAIL_CONCURRENCY, (inv) => {
     const type = inv.emails.length > 0 ? EmailType.REINSISTENCIA : EmailType.RECORDATORIO;
     return sendInvitationTypeEmail(inv.id, type);
   });
   revalidatePath(`/eventos/${eventId}`);
-  return result;
+  return { ...result, remaining: totalPending - invitations.length };
 }
 
 export async function resendInvitationEmail(eventId: string, invitationId: string) {

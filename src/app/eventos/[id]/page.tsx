@@ -53,15 +53,15 @@ export default async function EventoDetailPage({ params, searchParams }: { param
 
   async function sendInvitesAction() {
     "use server";
-    const { sent, failed } = await sendInvitationEmails(eventId);
-    const msg = `Invitaciones enviadas: ${sent}${failed ? `, fallidas: ${failed}` : ""}.`;
+    const { sent, failed, remaining } = await sendInvitationEmails(eventId);
+    const msg = `Invitaciones enviadas: ${sent}${failed ? `, fallidas: ${failed}` : ""}.${remaining > 0 ? ` Quedan ${remaining} pendientes — vuelve a apretar el botón para seguir.` : ""}`;
     redirect(`/eventos/${eventId}?emailOk=${failed ? "0" : "1"}&emailMsg=${encodeURIComponent(msg)}`);
   }
 
   async function sendRemindersAction() {
     "use server";
-    const { sent, failed } = await sendReminderEmails(eventId);
-    const msg = `Recordatorios enviados: ${sent}${failed ? `, fallidos: ${failed}` : ""}.`;
+    const { sent, failed, remaining } = await sendReminderEmails(eventId);
+    const msg = `Recordatorios enviados: ${sent}${failed ? `, fallidos: ${failed}` : ""}.${remaining > 0 ? ` Quedan ${remaining} pendientes — vuelve a apretar el botón para seguir.` : ""}`;
     redirect(`/eventos/${eventId}?emailOk=${failed ? "0" : "1"}&emailMsg=${encodeURIComponent(msg)}`);
   }
 
