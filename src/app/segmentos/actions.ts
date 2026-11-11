@@ -29,6 +29,14 @@ export async function addMemberByRutOrEmail(segmentId: string, formData: FormDat
   revalidatePath(`/segmentos/${segmentId}`);
 }
 
+export async function bulkDeleteSegments(formData: FormData) {
+  "use server";
+  const segmentIds = formData.getAll("segmentIds").map(String);
+  if (segmentIds.length === 0) return;
+  await prisma.segment.deleteMany({ where: { id: { in: segmentIds } } });
+  revalidatePath("/segmentos");
+}
+
 export async function removeMember(segmentId: string, contactId: string) {
   "use server";
   await prisma.segmentMember.delete({ where: { segmentId_contactId: { segmentId, contactId } } }).catch(() => {});
